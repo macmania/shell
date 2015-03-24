@@ -1,5 +1,5 @@
-#ifndef Shell_h
-#define Shell_h
+//#ifndef Shell_h
+//#define Shell_h
 
 typedef int bool;
 #define true 1
@@ -14,4 +14,4 @@ void executeCommand(char* command);
 bool isBackgroundJob(char* command); //goes through a linked list to see if the command is paused
 void waitPid(int childPid);
 
-#endif
+//#endif

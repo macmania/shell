@@ -42,3 +42,16 @@ int main (int argc, char** argv) {
 void printPrompt(){
   printf("Hello");
 }
+
+void readCmdLine(){
+
+}
+
+bool isBuiltCommand(char* command){
+  if(command){
+    return false;
+  }
+  else {
+    return true; //temporary
+  }
+}
