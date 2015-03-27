@@ -44,7 +44,7 @@ void printPrompt(){
 }
 
 void readCmdLine(){
-
+  
 }
 
 bool isBuiltCommand(char* command){
