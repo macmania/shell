@@ -28,7 +28,7 @@ char* getLine(void){
       printf("line: %s, address: %p, sizeof: %ld\n",linep, &linep, sizeof(linep));
 
       if(--len == 0){ //resize the size
-        printf("\nHere\n"); 
+        printf("\nHere\n");
         len = lenMax;
         lenMax = lenMax * 2;
         char* lineNew = realloc(linep, lenMax);
@@ -40,6 +40,10 @@ char* getLine(void){
         line = lineNew + (line - linep);
         linep = lineNew;
       }
+
+
+      printf("\nline pointer: %c, %p\n", *line--, &line);
+
       if((*line++ = c) == '\n'){
         break;
       }
