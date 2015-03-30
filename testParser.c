@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 //#include "parser.h"
 
 
@@ -9,15 +10,16 @@ int main(int argc, char** arg) {
   char str[256];
   while(1){
         sampleChar = getLine();
-        printf("You entered %s, %lu\n", sampleChar, sizeof(sampleChar));
+
+        printf("You entered %s, %lu\n", sampleChar,  strlen(sampleChar));
   }
   return 0;
 }
 
 //returns the line in stdin
 char* getLine(void){
-  char* line = malloc(2), *linep = line;
-  size_t lenMax = 2, len = lenMax;
+  char* line = malloc(100), *linep = line;
+  size_t lenMax = 100, len = lenMax;
   int c;
 
   if(line == NULL){
@@ -25,10 +27,8 @@ char* getLine(void){
   }
   else {
     while((c = fgetc(stdin)) != EOF){
-      printf("line: %s, address: %p, sizeof: %ld\n",linep, &linep, sizeof(linep));
 
       if(--len == 0){ //resize the size
-        printf("\nHere\n");
         len = lenMax;
         lenMax = lenMax * 2;
         char* lineNew = realloc(linep, lenMax);
@@ -40,9 +40,6 @@ char* getLine(void){
         line = lineNew + (line - linep);
         linep = lineNew;
       }
-
-
-      printf("\nline pointer: %c, %p\n", *line--, &line);
 
       if((*line++ = c) == '\n'){
         break;
