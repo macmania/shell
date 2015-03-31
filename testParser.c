@@ -11,7 +11,7 @@ int main(int argc, char** arg) {
   while(1){
         sampleChar = getLine();
 
-        printf("You entered %s, %lu\n", sampleChar,  strlen(sampleChar));
+        printf("You entered %s, %lu, %c\n", sampleChar,  strlen(sampleChar), sampleChar[0]);
   }
   return 0;
 }

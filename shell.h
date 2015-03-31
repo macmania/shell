@@ -1,5 +1,6 @@
 //#ifndef Shell_h
 //#define Shell_h
+#include "parser.h"
 
 typedef int bool;
 #define true 1
@@ -9,9 +10,9 @@ typedef int bool;
 void printPrompt();
 char* readCmdLine();
 bool isBuiltCommand();
-void execBuiltInCmd(char* command);
-void executeCommand(char* command);
-bool isBackgroundJob(char* command); //goes through a linked list to see if the command is paused
-void waitPid(int childPid);
+void execBuiltInCmd(struct parseInfo*);
+void executeCommand(struct parseInfo*);
+bool isBackgroundJob(struct parseInfo*); //goes through a linked list to see if the command is paused
+void waitPid(int);
 bool isCmdEmpty(char*); 
 //#endif

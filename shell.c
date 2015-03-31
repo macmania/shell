@@ -8,8 +8,8 @@
 #include <stdlib.h>
 //#include <unistd.h> //fork
 #include "shell.h" //to-do need to put this in a directory
-#include <unistd.h>
-
+#include <unistd.h>//#include "parser.h"
+// #include "parser.h"
 
 int main (int argc, char** argv) {
   printPrompt();
@@ -17,16 +17,17 @@ int main (int argc, char** argv) {
   while(1) {
     int childPid; 
     char* cmdLine;
-    parseInfo* cmd; 
+    struct parseInfo* cmd; 
     commandType* cmdType; 
 
     cmdLine = readCmdLine(); //tokenizes the commands
     //perhaps record the commands typed in a document
-    if(ifCmdEmpty(cmdLine)){
+    if(isCmdEmpty(cmdLine)){
       continue; 
     }
         
-    parse(cmdLine); 
+    cmd = parse(cmdLine); 
+    parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
 
     if (isBuiltCommand(cmd)){
       execBuiltInCmd(cmd); //stop, etc.
@@ -43,6 +44,11 @@ int main (int argc, char** argv) {
         }
     }
   }
+}
+
+
+void waitPid(int pid) {
+
 }
 
 void printPrompt(){
@@ -83,8 +89,19 @@ char* readCmdLine(void){
   }
 }
 
+void execBuiltInCmd(struct parseInfo* cmd) {
+  
+}
 
-bool isBuiltCommand(char* command){
+void executeCommand(struct parseInfo* cmd) {
+
+}
+
+bool isBackgroundJob(struct parseInfo* cmd) {
+  return false; 
+}
+
+bool isBuiltCommand(struct parseInfo* command){
   if(command){
     return false;
   }
@@ -94,7 +111,7 @@ bool isBuiltCommand(char* command){
 }
 
 bool isCmdEmpty(char* cmd){
-  if(cmdLine == NULL || cmdLine[0] == '\0' || cmdLine[0] == '\n'){
+  if(cmd == NULL || cmd[0] == '\0' || cmd[0] == '\n'){
     return true; 
   }
   return false; 
