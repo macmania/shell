@@ -13,5 +13,5 @@ void execBuiltInCmd(char* command);
 void executeCommand(char* command);
 bool isBackgroundJob(char* command); //goes through a linked list to see if the command is paused
 void waitPid(int childPid);
-
+bool isCmdEmpty(char*); 
 //#endif
