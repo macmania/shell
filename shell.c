@@ -13,7 +13,6 @@
 #include <errno.h>
 #include <signal.h>
 
-
 int main (int argc, char** argv) {
   printPrompt();
   //add a list that adds commands to the list
@@ -142,8 +141,7 @@ void execBltInCmd(struct parseInfo* cmd) {
 
     struct stat buffer;
     int status;
-    char* path;
-
+    char path[strlen(getenv("HOME"))+10];
 
     if(argNum != 0){
       status = stat(arg[0], &buffer);
@@ -151,18 +149,20 @@ void execBltInCmd(struct parseInfo* cmd) {
         printf("The argument: %s passed is not a valid directory\n", arg[0]);
         return;
       }
-      path = arg[0];
+      strcpy(path, arg[0]);
       //change the directory 
     }
     else {
-      path = strcat(getenv("HOME"), "/Workspace/");
+      strcpy(path, getenv("HOME"));
+      strcat(path, "/Workspace");
+       
     }
 
     if(chdir(path) == -1){
+      printf("%s\n", path);
       printf("Command cd did not work\n");
-      //unsuccessful
     }
-    system("ls");
+    
     return;
   }
 
