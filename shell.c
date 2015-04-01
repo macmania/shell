@@ -55,7 +55,7 @@ void waitPid(int pid) {
 }
 
 void printPrompt(){
-  printf("Welcome to Jojo's small scale shell");
+  printf("Welcome to Jojo's small scale shell\n");
 }
 
 char* readCmdLine(void){
@@ -96,7 +96,7 @@ char* readCmdLine(void){
 void execBltInCmd(struct parseInfo* cmd) {
   char* command = cmd->command;
   char** arg = cmd->ArgVarList;
-  int argNum; 
+  int argNum = cmd->argVarNum; 
 
   if(strcmp(command, "kill") == 0){
     if(argNum == 0) {
@@ -119,16 +119,16 @@ void execBltInCmd(struct parseInfo* cmd) {
       int errNum = kill(jobID, SIGINT); 
       switch (errNum){
         case EINVAL: 
-          printf("Signal number not supported");
+          printf("Signal number not supported\n");
           break; 
         case EPERM: 
-          printf("Process does not have permission to send signal to any receiving process"); 
+          printf("Process does not have permission to send signal to any receiving process\n"); 
           break; 
         case ESRCH: 
-          printf("No process or process group can be found corresponding to pid: %d", jobID); 
+          printf("No process or process group can be found corresponding to pid: %d\n", jobID); 
           break; 
         default: 
-          printf("Error %d due to kill command", errNum);
+          printf("Error %d due to kill command\n", errNum);
       }
   }
 
@@ -138,19 +138,35 @@ void execBltInCmd(struct parseInfo* cmd) {
       return; 
     }
 
-    if(argNum == 0){
+    struct stat buffer;
+    int status;
+    char* path;
+    if(argNum != 0){
+      status = stat(arg[0], &buffer);
+      if(!S_ISDIR(buffer.st_mode)){
+        printf("The argument: %s passed is not a valid directory\n", arg[0]);
+        return;
+      }
+      path = arg[0];
       //change the directory 
     }
     else {
-      //change the directory specified in the argument given that the directory is valid
-
+      path = strcat(getenv("HOME"), "/Workspace/");
     }
 
+    if(chdir(path) == -1){
+      printf("%s %lu", path, strlen(path));
+      printf("Command cd did not work\n");
+      //unsuccessful
+    }
+    system("ls");
+    return;
   }
 
   if(argNum == 0){
 
     if(strcmp(command, "exit") == 0){
+      exit(EXIT_SUCCESS); //temporary :) 
       //kills of the jobs in the list
     }
     else if(strcmp(command, "jobs") == 0){
@@ -218,4 +234,5 @@ void printErrMsg(enum Error_Messages msg, char* cmd) {
   else if(msg == FILE_NAME_INCOR){
     printf("No such file or directory"); 
   }
+  printf("\n");
 }

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include "parser.h"
 
 void init_info(struct parseInfo *p){
@@ -27,7 +28,7 @@ struct parseInfo* parse (char* cmdLine){
     return NULL; 
   }
 
-  tokCmds = strtok(tmpCmd, " "); 
+  tokCmds = strtok(tmpCmd, " \n"); 
   memcpy(result->command, tokCmds, strlen(tokCmds)); //maybe add a method to further wrap the initialization process better
 
 
@@ -62,11 +63,12 @@ void free_info(struct parseInfo *info){
 }
 
 //tests the methods, not yet adept in using test cases
-/**int main(void){
+/**
+int main(void){
   struct parseInfo* info; 
   // printf("hello");
 
-  info = parse("cd hello | pipe | hello eh"); 
+  info = parse("cd\n"); 
   printf("%s", info->command); 
 
   int i; 
@@ -74,5 +76,8 @@ void free_info(struct parseInfo *info){
     printf("%s\n", info->ArgVarList[i]); 
   }
 
+  printf("%s %d", getenv("HOME"), chdir("../"));
+  system("ls");
   return 0; 
-}**/
+}
+**/
