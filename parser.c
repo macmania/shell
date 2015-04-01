@@ -34,8 +34,9 @@ struct parseInfo* parse (char* cmdLine){
 
   // //still need to do the piping cmd
   int i = 0; 
-  while((tokCmds = strtok(NULL, " "))){
-    result->ArgVarList[i] = tokCmds; 
+  while((tokCmds = strtok(NULL, " \n"))){
+    result->ArgVarList[i] = malloc(sizeof(char));
+    memcpy(result->ArgVarList[i], tokCmds, strlen(tokCmds));
     i++; 
   }
 
@@ -59,7 +60,12 @@ void print_info(struct parseInfo *info){
 
 void free_info(struct parseInfo *info){
 	printf("freeing memory block"); 
-	free(info); 
+	int i; 
+  for(i = 0; i < info->argVarNum; i++){
+    free(info->ArgVarList[i]);
+  }
+  free(info); 
+
 }
 
 //tests the methods, not yet adept in using test cases

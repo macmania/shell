@@ -34,7 +34,8 @@ int main (int argc, char** argv) {
 
     if (isBltInCmd(cmd)){
       execBltInCmd(cmd); //stop, etc.
-    } else {
+    } 
+    else {
         childPid = fork();
         if(childPid == 0) {
           execCmd(cmd); //calls execvp
@@ -87,7 +88,7 @@ char* readCmdLine(void){
       }
     }
 
-    *line = '\0';
+    //*line = '\0';
     return linep;
   }
 }
@@ -97,6 +98,7 @@ void execBltInCmd(struct parseInfo* cmd) {
   char* command = cmd->command;
   char** arg = cmd->ArgVarList;
   int argNum = cmd->argVarNum; 
+
 
   if(strcmp(command, "kill") == 0){
     if(argNum == 0) {
@@ -141,9 +143,11 @@ void execBltInCmd(struct parseInfo* cmd) {
     struct stat buffer;
     int status;
     char* path;
+
+
     if(argNum != 0){
       status = stat(arg[0], &buffer);
-      if(!S_ISDIR(buffer.st_mode)){
+      if(!S_ISDIR(buffer.st_mode) ){
         printf("The argument: %s passed is not a valid directory\n", arg[0]);
         return;
       }
@@ -155,7 +159,6 @@ void execBltInCmd(struct parseInfo* cmd) {
     }
 
     if(chdir(path) == -1){
-      printf("%s %lu", path, strlen(path));
       printf("Command cd did not work\n");
       //unsuccessful
     }
