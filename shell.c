@@ -6,10 +6,13 @@
 **/
 #include <stdio.h>
 #include <stdlib.h>
-//#include <unistd.h> //fork
 #include "shell.h" //to-do need to put this in a directory
 #include <unistd.h>//#include "parser.h"
-// #include "parser.h"
+#include <sys/stat.h>
+#include <string.h>
+#include <errno.h>
+#include <signal.h>
+
 
 int main (int argc, char** argv) {
   printPrompt();
@@ -29,14 +32,14 @@ int main (int argc, char** argv) {
     cmd = parse(cmdLine); 
     parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
 
-    if (isBuiltCommand(cmd)){
-      execBuiltInCmd(cmd); //stop, etc.
+    if (isBltInCmd(cmd)){
+      execBltInCmd(cmd); //stop, etc.
     } else {
         childPid = fork();
         if(childPid == 0) {
-          executeCommand(cmd); //calls execvp
+          execCmd(cmd); //calls execvp
         } else {
-          if(isBackgroundJob(cmd)) {
+          if(isBgJob(cmd)) {
             //record in a list of background jobs
           } else {
             waitPid(childPid);
@@ -89,25 +92,107 @@ char* readCmdLine(void){
   }
 }
 
-void execBuiltInCmd(struct parseInfo* cmd) {
+//Still need to test this
+void execBltInCmd(struct parseInfo* cmd) {
+  char* command = cmd->command;
+  char** arg = cmd->ArgVarList;
+  int argNum; 
+
+  if(strcmp(command, "kill") == 0){
+    if(argNum == 0) {
+      printErrMsg(MORE_NUM_ARGS, command);
+      return;
+    }
+    else if (argNum > 1){
+      printErrMsg(LESS_NUM_ARGS, command);
+    }
+      
+    char* strPtrEnd;
+    //kills the given job_pid
+      int jobID = strtol(arg[0], &strPtrEnd, 10); 
+      //this part is shaky, need to be more rigorous
+      if(strPtrEnd != NULL){
+        printErrMsg(NEED_NUMERIC_ARG, command);
+        return;
+      }
+
+      int errNum = kill(jobID, SIGINT); 
+      switch (errNum){
+        case EINVAL: 
+          printf("Signal number not supported");
+          break; 
+        case EPERM: 
+          printf("Process does not have permission to send signal to any receiving process"); 
+          break; 
+        case ESRCH: 
+          printf("No process or process group can be found corresponding to pid: %d", jobID); 
+          break; 
+        default: 
+          printf("Error %d due to kill command", errNum);
+      }
+  }
+
+  if(strcmp(command, "cd") == 0){
+    if(argNum > 2){
+      printErrMsg(LESS_NUM_ARGS, command);
+      return; 
+    }
+
+    if(argNum == 0){
+      //change the directory 
+    }
+    else {
+      //change the directory specified in the argument given that the directory is valid
+
+    }
+
+  }
+
+  if(argNum == 0){
+
+    if(strcmp(command, "exit") == 0){
+      //kills of the jobs in the list
+    }
+    else if(strcmp(command, "jobs") == 0){
+      //need to have a running list that has the list of jobs that are running on the background, etc. 
+      //prints all of the current and background jobs
+    }
+
+    else if(strcmp(command, "history") == 0){
+      //need to have a queue of the number of jobs that have been processed successfully
+      //prints all of the jobs that are valid
+    }
+
+  }
   
+  else {
+    printErrMsg(LESS_NUM_ARGS, command); 
+  }
+
+
+ 
 }
 
-void executeCommand(struct parseInfo* cmd) {
+
+
+void execCmd(struct parseInfo* cmd) {
 
 }
 
-bool isBackgroundJob(struct parseInfo* cmd) {
+bool isBgJob(struct parseInfo* cmd) {
   return false; 
 }
 
-bool isBuiltCommand(struct parseInfo* command){
-  if(command){
-    return false;
+
+//temporary, only built in command is exit for now
+bool isBltInCmd(struct parseInfo* cmd){
+  char* command = cmd->command;
+  if(strcmp(command, "exit") == 0 || strcmp(command, "jobs") == 0 ||
+       strcmp(command, "cd") == 0 || strcmp(command, "kill") == 0 || 
+          strcmp(command, "history") == 0){
+    return true;
   }
-  else {
-    return true; //temporary
-  }
+  return false; 
 }
 
 bool isCmdEmpty(char* cmd){
@@ -115,4 +200,22 @@ bool isCmdEmpty(char* cmd){
     return true; 
   }
   return false; 
+}
+
+//prints error message based on the error message built in 
+void printErrMsg(enum Error_Messages msg, char* cmd) {
+  printf("%s: ", cmd);
+
+  if(msg == LESS_NUM_ARGS) {
+    printf("incorrect number of arguments passed"); 
+  }
+  else if(msg == MORE_NUM_ARGS) {
+    printf("need more information to run command"); 
+  }
+  else if(msg == NEED_NUMERIC_ARG) {
+    printf("numergic argument required"); 
+  }
+  else if(msg == FILE_NAME_INCOR){
+    printf("No such file or directory"); 
+  }
 }
