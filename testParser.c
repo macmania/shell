@@ -14,7 +14,7 @@ int main(int argc, char** arg) {
   //       printf("You entered %s, %lu, %c\n", sampleChar,  strlen(sampleChar), sampleChar[0]);
   // }
 
-  char* command = "   echo        input1      <       a.out > output1 | something    ";
+  char* command = "       echo input1 < a.out > output1 | something";
   int length = strlen(command)+1;
   char strPtr[strlen(command)+1];//[length];// = strdup(some);
   
@@ -31,7 +31,13 @@ int main(int argc, char** arg) {
 
   while(cmdPtr){
     cmdType = copy[cmdPtr-strPtr+strlen(cmdPtr)];
-    printf("%d,%d",cmdPtr-strPtr ,cmdPtr-strPtr+strlen(cmdPtr)-1));
+   
+
+  //  printf("%")
+    printf("%lu,%lu\n",cmdPtr-strPtr ,cmdPtr-strPtr+strlen(cmdPtr)-1);
+    strncpy(prev, &copy[cmdPtr-strPtr], strlen(cmdPtr));
+    printf("%s %c \n",prev, cmdType);
+
     //printf("\n%s", )
     //printf("%s\t",cmdPtr);//, copy[cmdPtr-strPtr+strlen(cmdPtr)]);
     //printf("%d",cmdPtr-strPtr+strlen(cmdPtr));
@@ -39,25 +45,25 @@ int main(int argc, char** arg) {
     
     //printf("%s", cmdPtr);
     
-    if(cmdType != '\0'){
-      printf("%s",cmdPtr);
-      strncpy(prev, cmdPtr,strlen(cmdPtr));
-      printf("%s", prev);
-      temp = strtok(prev, " ");
-      if(temp){
-        printf("2 things: %s %s\n", prev, temp);
-      }
-      else {
-        printf("%s\n", prev); 
-      }
-    }
+    // if(cmdType != '\0'){
+    //   printf("%s",cmdPtr);
+    //   prev = &copy[cmdPtr-strPtr+strlen(cmdPtr)+1]
+    //   printf("%s", prev);
+    //   temp = strtok(prev, " ");
+    //   if(temp){
+    //     printf("2 things: %s %s\n", prev, temp);
+    //   }
+    //   else {
+    //     printf("%s\n", prev); 
+    //   }
+    // }
     cmdPtr = strtok(NULL, delim);
     printf("%s\n\n", cmdPtr);
 
 
   }
 
-
+  free(prev);
 
   return 0;
 }

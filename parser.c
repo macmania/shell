@@ -14,7 +14,7 @@ void init_info(struct parseInfo *p){
 //parses each of the tokens given the command
 //still need to test with all of the base cases
 void parse_command(char *command, commandType *comm){
-  char *cmdTok, *delimeters, *cpyPtr, *tempCmdTok, *prevTempCmdTok; 
+  char *cmdTok, *delimeters, *cpyPtr, *tempCmdTok=malloc(sizeof(char)), *prevTempCmdTok; 
   int lenCommandStr, locCmdType, numTokens=0;
   char commandArrCopy[lenCommandStr];
   char commandType; 
@@ -27,26 +27,29 @@ void parse_command(char *command, commandType *comm){
   numTokens = numTokens + 1;
   comm = malloc(sizeof(commandType));
   
-  printf("%s\t%s\t%s\t%s", command, cpyPtr, commandArrCopy,cmdTok );
+  //printf("%s\t%s\t%s\t%s", command, cpyPtr, commandArrCopy,cmdTok );
 
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
     commandType = cpyPtr[locCmdType];
+    // "echo input1 < a.out > output1 | something";
+     printf("%lu,%lu\n",cmdTok-commandArrCopy ,strlen(cmdTok));
+    memcpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
+    printf("here: %s %c\n", tempCmdTok, commandType);
+         // prevTempCmdTok = strtok(tempCmdTok, " ");
+          //tempCmdTok=strtok(NULL, " ");
 
+    if(tempCmdTok) { //is not null then prevTempCmdTok better be a command
+      if(is_file(tempCmdTok)){
+
+      }
+      else {
+
+      }
+    } 
     switch(commandType) {
       case '>':
-       //   tempCmdTok = itrim(cmdTok); 
-          prevTempCmdTok = strtok(tempCmdTok, " ");
-          tempCmdTok=strtok(NULL, " ");
-
-          if(tempCmdTok) { //is not null then prevTempCmdTok better be a command
-            if(is_file(tempCmdTok)){
-
-            }
-            else {
-
-            }
-          }
+          
         break;
       case '<': 
         break; 
@@ -62,7 +65,7 @@ void parse_command(char *command, commandType *comm){
 
   }
 
-
+  free(tempCmdTok);
 }
 
 struct parseInfo* parse (char* cmdLine){
@@ -125,11 +128,11 @@ int is_file(char* fileName){
 }
 
 //tests the methods, not yet adept in using test cases
-/**
+//**
 int main(void){
   struct parseInfo* info; 
   commandType* type; 
-  char* command = "echo input1 < a.out > output1 | something";
+  char* command = "       echo input1 < a.out > output1 | something";
   // printf("hello");
 
   // info = parse("cd\n"); 
@@ -148,4 +151,4 @@ int main(void){
 
   return 0; 
 }
-**/
+/**/
