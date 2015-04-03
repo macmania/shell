@@ -155,11 +155,9 @@ void execBltInCmd(struct parseInfo* cmd) {
     else {
       strcpy(path, getenv("HOME"));
       strcat(path, "/Workspace");
-       
     }
 
     if(chdir(path) == -1){
-      printf("%s\n", path);
       printf("Command cd did not work\n");
     }
     

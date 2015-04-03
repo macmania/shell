@@ -6,6 +6,20 @@
 #define PIPE_MAX_NUM 10
 #define FILE_MAX_NUM 40
 
+enum
+error_msg_parse {
+  FILE_NAME_NOT_FOUND=0,
+  UNKNOWN_CMD,
+};
+
+enum
+command_type {
+  ENTER_FILE=0, 
+  DEPART_FILE,
+  BACKGROUND_CMD,
+  PIPE
+};
+
 struct parseInfo{
   char* command;
   char* ArgVarList[MAX_VAR_NUM]; //pointer to indicate the type of variations of the command
@@ -32,4 +46,6 @@ void parse_command(char*, commandType*);
 struct parseInfo* parse (char*);
 void print_info(struct parseInfo*);
 void free_info(struct parseInfo*);
-char* getCmds(void);
+char* get_cmds(void);
+char* print_error(enum error_msg_parse);
+int is_file(char* fileName); 

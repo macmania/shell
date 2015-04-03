@@ -6,13 +6,59 @@
 
 char* getLine(void);
 int main(int argc, char** arg) {
-  char* sampleChar;
-  char str[256];
-  while(1){
-        sampleChar = getLine();
+  // char* sampleChar;
+  // char str[256];
+  // while(1){
+  //       sampleChar = getLine();
 
-        printf("You entered %s, %lu, %c\n", sampleChar,  strlen(sampleChar), sampleChar[0]);
+  //       printf("You entered %s, %lu, %c\n", sampleChar,  strlen(sampleChar), sampleChar[0]);
+  // }
+
+  char* command = "   echo        input1      <       a.out > output1 | something    ";
+  int length = strlen(command)+1;
+  char strPtr[strlen(command)+1];//[length];// = strdup(some);
+  
+  strncpy(strPtr, command, length);
+  strPtr[strlen(strPtr)-1]='\0';
+  
+  char* copy = strdup(strPtr);
+  char* delim = "&><|";
+  char* cmdPtr = strtok(strPtr, delim); 
+  char cmdType; 
+  char *temp, *prev=malloc(sizeof(char));
+
+
+
+  while(cmdPtr){
+    cmdType = copy[cmdPtr-strPtr+strlen(cmdPtr)];
+    printf("%d,%d",cmdPtr-strPtr ,cmdPtr-strPtr+strlen(cmdPtr)-1));
+    //printf("\n%s", )
+    //printf("%s\t",cmdPtr);//, copy[cmdPtr-strPtr+strlen(cmdPtr)]);
+    //printf("%d",cmdPtr-strPtr+strlen(cmdPtr));
+    //printf("%c\n", copy[cmdPtr-strPtr+strlen(cmdPtr)]);
+    
+    //printf("%s", cmdPtr);
+    
+    if(cmdType != '\0'){
+      printf("%s",cmdPtr);
+      strncpy(prev, cmdPtr,strlen(cmdPtr));
+      printf("%s", prev);
+      temp = strtok(prev, " ");
+      if(temp){
+        printf("2 things: %s %s\n", prev, temp);
+      }
+      else {
+        printf("%s\n", prev); 
+      }
+    }
+    cmdPtr = strtok(NULL, delim);
+    printf("%s\n\n", cmdPtr);
+
+
   }
+
+
+
   return 0;
 }
 
