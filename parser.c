@@ -173,7 +173,7 @@ int is_file(char* fileName){
 }
 
 //tests the methods, not yet adept in using test cases
-//**
+/**
 int main(void){
   struct parseInfo* info; 
   commandType* type; 
@@ -197,4 +197,4 @@ int main(void){
 
   return 0; 
 }
-/**/
+**/

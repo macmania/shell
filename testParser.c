@@ -35,7 +35,7 @@ int main(int argc, char** arg) {
     //printf("%lu,%lu\n",cmdPtr-strPtr ,cmdPtr-strPtr+strlen(cmdPtr)-1);
   //  printf("%s, %s\n", &copy[cmdPtr-strPtr], copy);
     printf("%lu, %lu\n", cmdPtr-strPtr, strlen(cmdPtr));
-    memcpy(prev, &copy[cmdPtr-strPtr], strlen(cmdPtr));
+    strncpy(prev, &copy[cmdPtr-strPtr], strlen(cmdPtr));
     //printf("%s %c \n",prev, cmdType);
     printf("Something: %s\n", prev);
     memset(&prev[0], 0, strlen(prev));
