@@ -27,16 +27,19 @@ int main(int argc, char** arg) {
   char cmdType; 
   char *temp, *prev=malloc(sizeof(char));
 
-  printf("%s", strPtr);
+  //printf("%s\n", cmdPtr);
 
   while(cmdPtr){
     cmdType = copy[cmdPtr-strPtr+strlen(cmdPtr)];
    
-    printf("%lu,%lu\n",cmdPtr-strPtr ,cmdPtr-strPtr+strlen(cmdPtr)-1);
-    printf("%s, %s\n", &copy[cmdPtr-strPtr], copy);
-    strncpy(prev, &copy[cmdPtr-strPtr], strlen(cmdPtr));
-    printf("%s %c \n",prev, cmdType);
-
+    //printf("%lu,%lu\n",cmdPtr-strPtr ,cmdPtr-strPtr+strlen(cmdPtr)-1);
+  //  printf("%s, %s\n", &copy[cmdPtr-strPtr], copy);
+    printf("%lu, %lu\n", cmdPtr-strPtr, strlen(cmdPtr));
+    memcpy(prev, &copy[cmdPtr-strPtr], strlen(cmdPtr));
+    //printf("%s %c \n",prev, cmdType);
+    printf("Something: %s\n", prev);
+    memset(&prev[0], 0, strlen(prev));
+    printf("Something: %s\n", prev);
     //printf("\n%s", )
     //printf("%s\t",cmdPtr);//, copy[cmdPtr-strPtr+strlen(cmdPtr)]);
     //printf("%d",cmdPtr-strPtr+strlen(cmdPtr));
@@ -57,7 +60,7 @@ int main(int argc, char** arg) {
     //   }
     // }
     cmdPtr = strtok(NULL, delim);
-    printf("%s\n\n", cmdPtr);
+    //printf("%s\n\n", cmdPtr);
 
 
   }

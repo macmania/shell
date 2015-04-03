@@ -33,32 +33,32 @@ void parse_command(char *command, commandType *comm){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
     commandType = cpyPtr[locCmdType];
     // "echo input1 < a.out > output1 | something";
-     printf("%lu,%lu\n",cmdTok-commandArrCopy ,strlen(cmdTok));
+    printf("%lu,%lu\n",cmdTok-commandArrCopy ,strlen(cmdTok));
     memcpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
-    printf("here: %s %c\n", tempCmdTok, commandType);
+    printf("here: %s\n", tempCmdTok);
+    memset(&tempCmdTok[0], 0, strlen(tempCmdTok));
          // prevTempCmdTok = strtok(tempCmdTok, " ");
           //tempCmdTok=strtok(NULL, " ");
 
-    if(tempCmdTok) { //is not null then prevTempCmdTok better be a command
-      if(is_file(tempCmdTok)){
+    // if(tempCmdTok) { //is not null then prevTempCmdTok better be a command
+    //   if(is_file(tempCmdTok)){
 
-      }
-      else {
+    //   }
+    //   else {
 
-      }
-    } 
-    switch(commandType) {
-      case '>':
-          
-        break;
-      case '<': 
-        break; 
-      case '|':
-        break;
-      case '&':
-        comm->isBackground = 1;
-        break;
-    }
+    //   }
+    // } 
+    // switch(commandType) {
+    //   case '>':
+    //     break;
+    //   case '<': 
+    //     break; 
+    //   case '|':
+    //     break;
+    //   case '&':
+    //     comm->isBackground = 1;
+    //     break;
+    // }
     
     cmdTok = strtok(NULL, delimeters);
     numTokens++;
