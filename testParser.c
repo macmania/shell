@@ -19,7 +19,7 @@ int main(int argc, char** arg) {
   char strPtr[strlen(command)+1];//[length];// = strdup(some);
   
   strncpy(strPtr, command, length);
-  strPtr[strlen(strPtr)-1]='\0';
+  strPtr[strlen(command)]='\0';
   
   char* copy = strdup(strPtr);
   char* delim = "&><|";
@@ -27,14 +27,13 @@ int main(int argc, char** arg) {
   char cmdType; 
   char *temp, *prev=malloc(sizeof(char));
 
-
+  printf("%s", strPtr);
 
   while(cmdPtr){
     cmdType = copy[cmdPtr-strPtr+strlen(cmdPtr)];
    
-
-  //  printf("%")
     printf("%lu,%lu\n",cmdPtr-strPtr ,cmdPtr-strPtr+strlen(cmdPtr)-1);
+    printf("%s, %s\n", &copy[cmdPtr-strPtr], copy);
     strncpy(prev, &copy[cmdPtr-strPtr], strlen(cmdPtr));
     printf("%s %c \n",prev, cmdType);
 
