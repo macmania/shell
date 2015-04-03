@@ -26,7 +26,7 @@ void parse_command(char *command, commandType *comm){
   //printf("%lu\n", strlen(cpyPtr));
   cmdTok = strtok(commandArrCopy, delimeters);
   numTokens = numTokens + 1;
-  comm = malloc(sizeof(commandType));
+  //comm = malloc(sizeof(commandType));
   
   //printf("%s\t%s\t%s\t%s", command, cpyPtr, commandArrCopy,cmdTok );
 
@@ -35,10 +35,12 @@ void parse_command(char *command, commandType *comm){
     commandType = cpyPtr[locCmdType];
     
     memcpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
-    memset(&tempCmdTok[0], 0, strlen(cmdTok));
-    prevTempCmdTok = strtok(tempCmdTok, " ");
-    nextCmdTok=strtok(NULL, " ");
-
+    
+    if(!(prevTempCmdTok = strtok(tempCmdTok, " "))){
+      prevTempCmdTok = strdup(tempCmdTok);
+    }
+    nextCmdTok=strtok(NULL, " ");  
+    
     if(nextCmdTok) { //is not null then prevTempCmdTok better be a command
       if(is_file(nextCmdTok)){
         isInFile_Dir=3; //11
@@ -55,7 +57,7 @@ void parse_command(char *command, commandType *comm){
         isInFile_Dir=0; //means it should be a normal command
       }
     } 
-    printf("%c\n", commandType);
+    //printf("%c\n", commandType);
     switch(commandType) {
       
       case '>':
@@ -66,11 +68,13 @@ void parse_command(char *command, commandType *comm){
         comm->commandType=DEPART_FILE;
         cmdTok = strtok(NULL, delimeters);
         strncpy(comm->outFile, cmdTok, strlen(cmdTok));
-        strncpy(comm->inFile, 0, strlen(comm->inFile));
+        memset(&(comm->inFile[0]), '\0', strlen(comm->inFile));
           //remove spaces in commTok; 
         //}
         break;
       case '<':
+         printf("why??? %d %s %s", isInFile_Dir, prevTempCmdTok, nextCmdTok);
+
         if(isInFile_Dir==1){ //the very first token is a file
           strncpy(comm->inFile, prevTempCmdTok, strlen(cmdTok)); //im so confused here, need to rest
         }
@@ -82,14 +86,16 @@ void parse_command(char *command, commandType *comm){
         comm->isOutFile = 0;
         comm->isBackground=0;
         comm->commandType=ENTER_FILE;
-        strncpy(comm->outFile, 0, strlen(comm->outFile));
+       // comm->outFile[0]=0;
+       // memset(&(comm->outFile)[0], '\0', strlen(comm->outFile));
         //need to process the rest of the commands
         cmdTok = strtok(NULL, delimeters);
         if(cmdTok == NULL) {
-          printf("%d", isInFile_Dir);
-          printf("%s %s\n", comm->inFile, comm->outFile);
+         
+          printf("\n%s %s\n", comm->inFile, comm->outFile);
           printf("hererere");
-
+          return; //this is where the problem lies, need to be able
+              /*----- temporary fix ---*/
         }
 
         break; 
@@ -103,9 +109,13 @@ void parse_command(char *command, commandType *comm){
         strncpy(comm->inFile, 0, strlen(comm->inFile));
         strncpy(comm->outFile, 0, strlen(comm->outFile));
         break;
+      default: 
+        cmdTok = strtok(NULL, delimeters);
+        break;
     }
     
    // cmdTok = strtok(NULL, delimeters);
+    memset(&tempCmdTok[0], 0, strlen(cmdTok));
     numTokens++;
 
   }
@@ -172,8 +182,11 @@ int is_file(char* fileName){
   return (stat(fileName, &buffer) == 0);
 }
 
+
+
+
 //tests the methods, not yet adept in using test cases
-/**
+//**
 int main(void){
   struct parseInfo* info; 
   commandType* type; 
@@ -191,10 +204,10 @@ int main(void){
 
   // printf("%s %d", getenv("HOME"), chdir("../"));
   // system("ls");
-
+  type = malloc(sizeof(commandType));
   parse_command(command, type);
   printf("%s %s\n", type->inFile, type->outFile);
 
   return 0; 
 }
-**/
+/**/
