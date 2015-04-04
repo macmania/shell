@@ -79,9 +79,8 @@ void parse_command(char *command, commandType *comm){
       case '|': //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
         
-        printf("%lu", strlen(command) - (cmdTok - commandArrCopy));
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(command) - (cmdTok - commandArrCopy)); //---such as this---
-        printf("%s", tempCmdTok);
+       // printf("%lu", strlen(command) - (locCmdType-strlen(cmdTok)));
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(command) - (locCmdType-strlen(cmdTok))); //---such as this---
         set_pipes(tempCmdTok, comm);
 
         //changes the location of the command string token
@@ -101,29 +100,28 @@ void parse_command(char *command, commandType *comm){
 }
 
 //sets the pipes with the appropriate str token. 
-void set_pipes(char command[], commandType *cmdType){
+void set_pipes(char cmd[], commandType *cmdType){
   /** echo | a.out"  **/
-printf("HERERE");
-  char *pipeDelim, *tok, *cpyArr, *tempCmdTok;
-  char cmdArrCpy[strlen(command)];
+  
+  char *pipeDelim, *tok, *cpyArr;
+  char cmdArrCpy[strlen(cmd)];
+  char tempCmdTok[strlen(cmd)];
   int pipeLocation;
 
   pipeDelim="|";
-  tok = strtok(command, pipeDelim);
-  strncpy(cmdArrCpy, command, strlen(command));
-  cpyArr = strdup(cmdArrCpy);
+  strncpy(cmdArrCpy, cmd, strlen(cmd));
+  cmdArrCpy[strlen(cmd)] = '\0';
 
-  while(tok){
-    
-    strncpy(tempCmdTok, &cpyArr[tok-cmdArrCpy], strlen(tok)); 
+  cpyArr = strdup(cmdArrCpy);
+  tok = strtok(cmdArrCpy, pipeDelim);
+
+  while((tok = strtok(NULL, pipeDelim))){
+    pipeLocation = tok - cmdArrCpy;
+    strncpy(tempCmdTok, &cpyArr[pipeLocation], strlen(tok)); 
     cmdType->CmdArray[cmdType->numPipes] = *parse(tempCmdTok);
     cmdType->numPipes++; 
-    
-    tok = strtok(NULL, pipeDelim);
-    memset(&tempCmdTok[0], 0, strlen(tempCmdTok)); //reset the temp command token
   }
-
-
+ 
 }
 
 
@@ -257,6 +255,12 @@ int main(void){
   //printf("%s %s\n", type->inFile, type->outFile);
 
   printf("%d", type->numPipes);
+
+
+  int i; 
+  for(i=0; i < type->numPipes; i++){
+    print_info(&type->CmdArray[i]);
+  }
 
 
   return 0; 
