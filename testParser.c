@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h> 
 //#include "parser.h"
 
 
 char* getLine(void);
+int is_proper_file(char*);
 int main(int argc, char** arg) {
   // char* sampleChar;
   // char str[256];
@@ -65,6 +67,8 @@ int main(int argc, char** arg) {
 
   }
 
+  printf("%d", is_proper_file("issomething"));
+
   free(prev);
 
   return 0;
@@ -104,4 +108,12 @@ char* getLine(void){
     return linep;
   }
 
+}
+
+int is_proper_file(char* fileName){
+  
+  for(;*fileName;fileName++){
+    if(isspace(*fileName)) return 0;
+  }
+  return 1;
 }

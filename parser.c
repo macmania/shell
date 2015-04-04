@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include "parser.h"
 #include <sys/stat.h>
-
+#include <ctype.h> 
 void init_info(struct parseInfo *p){
   p->command = malloc(sizeof(char)); 
   p->argVarNum = 0; //unitialize for now
@@ -14,8 +14,8 @@ void init_info(struct parseInfo *p){
 //parses each of the tokens given the command
 //still need to test with all of the base cases
 void parse_command(char *command, commandType *comm){
-  char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok, *nextCmdTok, tempCmdTok[strlen(command)+1];
-  int lenCommandStr=strlen(command)+1, locCmdType, numTokens=0, isInFile_Dir=-1;
+  char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok, tempCmdTok[strlen(command)+1];
+  int lenCommandStr=strlen(command)+1, locCmdType;
   char commandArrCopy[lenCommandStr];
   char commandType; 
 
@@ -29,102 +29,80 @@ void parse_command(char *command, commandType *comm){
   commandArrCopy[strlen(command)] = '\0';
   cpyPtr = strdup(commandArrCopy);
   cmdTok = strtok(commandArrCopy, delimeters);
-  numTokens = numTokens + 1;
 
 
   //Sample command: 
   /***** input < echo > output **/
-
+ 
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
     commandType = cpyPtr[locCmdType];
     
-    memcpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
+    strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
     
-    if(!(prevTempCmdTok = strtok(tempCmdTok, " "))){
-      prevTempCmdTok = strdup(tempCmdTok);
-    }
-    nextCmdTok=strtok(NULL, " ");  
-    
-    if(nextCmdTok) { //is not null then prevTempCmdTok better be a command
-      if(is_file(nextCmdTok)){
-        isInFile_Dir=3; //11
-      }
-      else { //it's a string and needs to be saved somewhere
-        isInFile_Dir=2; //2
-      }
-    }
-    else{
-      if(is_file(prevTempCmdTok)){
-         isInFile_Dir=1; //means it is a file or directory
-      }
-      else{
-        isInFile_Dir=0; //means it should be a normal command
-      }
-    } 
-    //printf("%c\n", commandType);
     switch(commandType) {
       
-      case '>':
-        //if(isInFile){ //there is a file or directory that needs to be saved
-        comm->isOutFile=1;
-        comm->isInFile = 0;
-        comm->isBackground=0;
-        comm->commandType=DEPART_FILE;
-        cmdTok = strtok(NULL, delimeters);
-        strncpy(comm->outFile, cmdTok, strlen(cmdTok));
-        memset(&(comm->inFile[0]), '\0', strlen(comm->inFile));
-          //remove spaces in commTok; 
-        //}
-        break;
-      case '<':
-         printf("why??? %d %s %s", isInFile_Dir, prevTempCmdTok, nextCmdTok);
+      case '<': //input file to the next command
+        prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
 
-        if(isInFile_Dir==1){ //the very first token is a file
-          strncpy(comm->inFile, prevTempCmdTok, strlen(cmdTok)); //im so confused here, need to rest
+        if(!is_proper_file(prevTempCmdTok)){
+          print_error(UNKNOWN_CMD); //may need to raise some sort of error or so
+          return;
         }
-        else if(isInFile_Dir==3){
-          strncpy(comm->inFile, nextCmdTok, strlen(cmdTok)); //im so confused here, need to rest
+        if(!is_file(prevTempCmdTok)){
+          print_error(FILE_NAME_NOT_FOUND);
+          return;
         }
 
+        strncpy(comm->inFile, prevTempCmdTok, strlen(prevTempCmdTok));
         comm->isInFile=1;
-        comm->isOutFile = 0;
-        comm->isBackground=0;
-        comm->commandType=ENTER_FILE;
-       // comm->outFile[0]=0;
-       // memset(&(comm->outFile)[0], '\0', strlen(comm->outFile));
-        //need to process the rest of the commands
-        cmdTok = strtok(NULL, delimeters);
-        if(cmdTok == NULL) {
-         
-          printf("\n%s %s\n", comm->inFile, comm->outFile);
-          printf("hererere");
-          return; //this is where the problem lies, need to be able
-              /*----- temporary fix ---*/
-        }
-
+       // printf("%s %s\n", prevTempCmdTok, nextCmdTok);
         break; 
+
+      case '>': //save output to output file, signals the end of the command
+        cmdTok = strtok(NULL, delimeters);
+        if(!cmdTok){
+          print_error(NO_FILE_ENTERED);
+        }
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
+        prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
+
+        if(!is_proper_file(prevTempCmdTok)){
+          print_error(UNKNOWN_CMD);
+          return;
+        }
+        comm->isOutFile=1;
+        strncpy(comm->outFile, prevTempCmdTok, strlen(prevTempCmdTok));
+        break;
+
       case '|': //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
         break;
       case '&':
         comm->isBackground = 1;
-        comm->isInFile=0;
-        comm->isOutFile=0;
-        strncpy(comm->inFile, 0, strlen(comm->inFile));
-        strncpy(comm->outFile, 0, strlen(comm->outFile));
-        break;
-      default: 
-        cmdTok = strtok(NULL, delimeters);
         break;
     }
     
-   // cmdTok = strtok(NULL, delimeters);
-    memset(&tempCmdTok[0], 0, strlen(cmdTok));
-    numTokens++;
-
+    cmdTok = strtok(NULL, delimeters);
+    memset(&tempCmdTok[0], 0, strlen(tempCmdTok));
   }
 
+}
+
+
+char* trimWhiteSpaces(char* str){
+  char* end; 
+
+  while(isspace(*str)) str++; 
+
+  if(*str == '\0') return str; 
+
+  end = str + strlen(str) - 1; 
+  while(end > str && isspace(*end)) end--; 
+
+  *(end+1) = 0; 
+
+  return str; 
 }
 
 struct parseInfo* parse (char* cmdLine){
@@ -183,10 +161,31 @@ void free_info(struct parseInfo *info){
 
 int is_file(char* fileName){
   struct stat buffer;
-  
   return (stat(fileName, &buffer) == 0);
 }
 
+//goes through each character
+int is_proper_file(char* fileName){
+  for(;*fileName;fileName++){
+    if(isspace(*fileName)) return 0;
+  }
+  return 1;
+}
+
+/*Need to improve this error message more thoroughly**/
+void print_error(enum error_msg_parse msg) {
+  switch(msg){
+    case FILE_NAME_NOT_FOUND: 
+      printf("File or Directory not found\n"); 
+      break;
+    case UNKNOWN_CMD: 
+      printf("Command cannot be processed succesfully\n"); 
+      break;
+    case NO_FILE_ENTERED:
+      printf("Please enter a file name");
+      break;
+  }
+}
 
 
 
@@ -196,7 +195,7 @@ int main(void){
   struct parseInfo* info; 
   commandType* type; 
 
-  char* command = "input1 < echo";
+  char* command = "input112 < echo > output";
   // printf("hello");
 
   // info = parse("cd\n"); 
