@@ -31,6 +31,7 @@ void parse_command(char *command, commandType *comm){
   cpyPtr = strdup(commandArrCopy);
   cmdTok = strtok(commandArrCopy, delimeters);
 
+  printf("%s\n", cpyPtr);
 
   //Sample command: 
   /***** input < echo > output **/
@@ -60,12 +61,12 @@ void parse_command(char *command, commandType *comm){
         break; 
 
       case '>': //save output to output file, signals the end of the command
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); //---such as this---
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added +1
         cmdTok = strtok(NULL, delimeters);
         if(!cmdTok){
           print_error(NO_FILE_ENTERED);
         }
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); //---such as this---
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added+ 1
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
 
         if(!is_proper_file(prevTempCmdTok)){
@@ -79,8 +80,8 @@ void parse_command(char *command, commandType *comm){
       case '|': //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
         
-       // printf("%lu", strlen(command) - (locCmdType-strlen(cmdTok)));
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(command) - (locCmdType-strlen(cmdTok))); //---such as this---
+     //   printf("%lu", strlen(command) - (locCmdType-strlen(cmdTok)));
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(command) - (locCmdType-strlen(cmdTok))+1); //---such as this---
         set_pipes(tempCmdTok, comm);
 
         //changes the location of the command string token
@@ -104,22 +105,26 @@ void set_pipes(char cmd[], commandType *cmdType){
   /** echo | a.out"  **/
   
   char *pipeDelim, *tok, *cpyArr;
-  char cmdArrCpy[strlen(cmd)];
-  char tempCmdTok[strlen(cmd)];
+  char cmdArrCpy[strlen(cmd)+1];
+  char tmpCmdTok[strlen(cmd+1)];
   int pipeLocation;
 
   pipeDelim="|";
-  strncpy(cmdArrCpy, cmd, strlen(cmd));
+  memcpy(cmdArrCpy, cmd, strlen(cmd));
   cmdArrCpy[strlen(cmd)] = '\0';
-
   cpyArr = strdup(cmdArrCpy);
+  printf("%s\n%s\n", cmd, cmdArrCpy);
   tok = strtok(cmdArrCpy, pipeDelim);
+  memset(&tmpCmdTok[0], 0, strlen(tmpCmdTok));
+
+
 
   while((tok = strtok(NULL, pipeDelim))){
     pipeLocation = tok - cmdArrCpy;
-    strncpy(tempCmdTok, &cpyArr[pipeLocation], strlen(tok)); 
-    cmdType->CmdArray[cmdType->numPipes] = *parse(tempCmdTok);
+    strncpy(tmpCmdTok, &cpyArr[pipeLocation], strlen(tok)+1); 
+    cmdType->CmdArray[cmdType->numPipes] = *parse(tmpCmdTok);
     cmdType->numPipes++; 
+    memset(&tmpCmdTok[0], 0, strlen(tmpCmdTok));
   }
  
 }
