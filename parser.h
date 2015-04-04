@@ -10,6 +10,7 @@ enum
 error_msg_parse {
   FILE_NAME_NOT_FOUND=0,
   UNKNOWN_CMD,
+  NO_FILE_ENTERED
 };
 
 enum
@@ -47,5 +48,7 @@ struct parseInfo* parse (char*);
 void print_info(struct parseInfo*);
 void free_info(struct parseInfo*);
 char* get_cmds(void);
-char* print_error(enum error_msg_parse);
+void print_error(enum error_msg_parse);
 int is_file(char* fileName); 
+char* trimWhiteSpaces(char*);
+int is_proper_file(char*);
