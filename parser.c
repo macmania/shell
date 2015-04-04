@@ -19,16 +19,21 @@ void parse_command(char *command, commandType *comm){
   char commandArrCopy[lenCommandStr];
   char commandType; 
 
+
+  /*Temporary variables until determined*/
+  int isPipe = -1; //temporary variable to ensure that the out command type is not valid once
+                  //in pipe 
+
   delimeters = "&><|";
   strncpy(commandArrCopy, command, lenCommandStr);
   commandArrCopy[strlen(command)] = '\0';
   cpyPtr = strdup(commandArrCopy);
-  //printf("%lu\n", strlen(cpyPtr));
   cmdTok = strtok(commandArrCopy, delimeters);
   numTokens = numTokens + 1;
-  //comm = malloc(sizeof(commandType));
-  
-  //printf("%s\t%s\t%s\t%s", command, cpyPtr, commandArrCopy,cmdTok );
+
+
+  //Sample command: 
+  /***** input < echo > output **/
 
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
