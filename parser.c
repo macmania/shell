@@ -14,7 +14,8 @@ void init_info(struct parseInfo *p){
 //parses each of the tokens given the command
 //still need to test with all of the base cases
 void parse_command(char *command, commandType *comm){
-  char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok, tempCmdTok[strlen(command)+1];
+  char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok;
+  char tempCmdTok[strlen(command)+1];
   int lenCommandStr=strlen(command)+1, locCmdType;
   char commandArrCopy[lenCommandStr];
   char commandType; 
@@ -33,16 +34,15 @@ void parse_command(char *command, commandType *comm){
 
   //Sample command: 
   /***** input < echo > output **/
- 
+  /**** --- To-do: need to improve the variable names --- ***/
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
     commandType = cpyPtr[locCmdType];
     
-    strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
-    
     switch(commandType) {
       
       case '<': //input file to the next command
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
 
         if(!is_proper_file(prevTempCmdTok)){
@@ -60,11 +60,12 @@ void parse_command(char *command, commandType *comm){
         break; 
 
       case '>': //save output to output file, signals the end of the command
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); //---such as this---
         cmdTok = strtok(NULL, delimeters);
         if(!cmdTok){
           print_error(NO_FILE_ENTERED);
         }
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); 
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)); //---such as this---
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
 
         if(!is_proper_file(prevTempCmdTok)){
@@ -77,7 +78,17 @@ void parse_command(char *command, commandType *comm){
 
       case '|': //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
+        
+        printf("%lu", strlen(command) - (cmdTok - commandArrCopy));
+        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(command) - (cmdTok - commandArrCopy)); //---such as this---
+        printf("%s", tempCmdTok);
+        set_pipes(tempCmdTok, comm);
+
+        //changes the location of the command string token
+        int numPipes = comm->numPipes; 
+        for(;numPipes > 0; numPipes--, cmdTok = strtok(NULL, delimeters));
         break;
+
       case '&':
         comm->isBackground = 1;
         break;
@@ -88,6 +99,34 @@ void parse_command(char *command, commandType *comm){
   }
 
 }
+
+//sets the pipes with the appropriate str token. 
+void set_pipes(char command[], commandType *cmdType){
+  /** echo | a.out"  **/
+printf("HERERE");
+  char *pipeDelim, *tok, *cpyArr, *tempCmdTok;
+  char cmdArrCpy[strlen(command)];
+  int pipeLocation;
+
+  pipeDelim="|";
+  tok = strtok(command, pipeDelim);
+  strncpy(cmdArrCpy, command, strlen(command));
+  cpyArr = strdup(cmdArrCpy);
+
+  while(tok){
+    
+    strncpy(tempCmdTok, &cpyArr[tok-cmdArrCpy], strlen(tok)); 
+    cmdType->CmdArray[cmdType->numPipes] = *parse(tempCmdTok);
+    cmdType->numPipes++; 
+    
+    tok = strtok(NULL, pipeDelim);
+    memset(&tempCmdTok[0], 0, strlen(tempCmdTok)); //reset the temp command token
+  }
+
+
+}
+
+
 
 
 char* trimWhiteSpaces(char* str){
@@ -196,6 +235,10 @@ int main(void){
   commandType* type; 
 
   char* command = "input112 < echo > output";
+  char* commandPipe = "ls -l | grep \"Apr\"";
+
+
+
   // printf("hello");
 
   // info = parse("cd\n"); 
@@ -209,8 +252,12 @@ int main(void){
   // printf("%s %d", getenv("HOME"), chdir("../"));
   // system("ls");
   type = malloc(sizeof(commandType));
-  parse_command(command, type);
-  printf("%s %s\n", type->inFile, type->outFile);
+  //parse_command(command, type);
+  parse_command(commandPipe, type);
+  //printf("%s %s\n", type->inFile, type->outFile);
+
+  printf("%d", type->numPipes);
+
 
   return 0; 
 }
