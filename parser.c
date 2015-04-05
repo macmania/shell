@@ -14,7 +14,8 @@ void init_info(struct parseInfo *p){
 //parses each of the tokens given the command
 //still need to test with all of the base cases
 void parse_command(char *command, commandType *comm){
-  char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok = malloc(sizeof(char));
+  char *cmdTok, *delimeters, *cpyPtr;
+  char *prevTempCmdTok = malloc(sizeof(char));
   char tempCmdTok[strlen(command)+1];
   int lenCommandStr=strlen(command)+1, locCmdType;
   char commandArrCopy[lenCommandStr];
@@ -37,7 +38,7 @@ void parse_command(char *command, commandType *comm){
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
     commandType = cpyPtr[locCmdType];
-    printf("%s %c\t", cmdTok, commandType);
+    printf("%s %c\t\n", cmdTok, commandType);
     switch(commandType) {
       
       case '<': //redirect input file to the next command
@@ -62,16 +63,18 @@ void parse_command(char *command, commandType *comm){
         break; 
 
       case '>': //redirect output to specified file, signals the end of the command
-        printf("HERE before %s \n", cmdTok);
         strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added +1
         
         cmdTok = strtok(NULL, delimeters);
         if(!cmdTok){
           print_error(NO_FILE_ENTERED);
+          return;
         }
+        printf("%s\n", tempCmdTok);
         strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added+ 1
         tempCmdTok[strlen(cmdTok)] = '\0';
-        prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
+        prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
+       // strncpy(, trimWhiteSpaces(tempCmdTok), strlen(tempCmdTok)); 
 
         if(!is_proper_file(prevTempCmdTok)){
           print_error(UNKNOWN_CMD);
@@ -90,53 +93,29 @@ void parse_command(char *command, commandType *comm){
         cmdTok = strtok(NULL, delimeters);
         strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
         tempCmdTok[strlen(cmdTok)] = '\0';
-        strncpy(prevTempCmdTok, trimWhiteSpaces(tempCmdTok), strlen(tempCmdTok)+1);
-        printf("%d\n", comm->numPipes);
+        strncpy(prevTempCmdTok, tempCmdTok, strlen(tempCmdTok)+1);
+        printf("\n---- Hello: %d\n", comm->numPipes);
+        prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
         comm->CmdArray[comm->numPipes] = *parse(prevTempCmdTok);
         comm->numPipes++;
 
-
-        //printf("%s %s %s\n", cmdTok, tempCmdTok, prevTempCmdTok);
-        
-       // printf("%s %s %s", cmdTok, tempCmdTok, prevTempCmdTok);
-        // strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(command) - (locCmdType-strlen(cmdTok))+1); //---such as this---
-        // printf("before temp: %s cmdTok: %s\n", tempCmdTok, cmdTok);
-        // set_pipes(tempCmdTok, comm);
-        // printf("after temp: %s cmdTok: %s\n", tempCmdTok, cmdTok);
-        // //changes the location of the command string token
-        
-        // int numPipes = comm->numPipes; 
-        // printf("%d\n", numPipes);
-        // for(;numPipes > 0; numPipes--){
-        //    printf("%s\n", cmdTok);
-        //    cmdTok = strtok(NULL, delimeters);
-        //    printf("%s\n", cmdTok);
-        // }
-        // printf("after iter temp: %s cmdTok: %s\n", tempCmdTok, cmdTok);
         isPipe = 1; 
       
         break;
 
       case '&':
         comm->isBackground = 1;
-        break;
+        return;
+      //  break;
     }
 
-    // if(isPipe == 1){
-    //   int numPipes = comm->numPipes+1; 
-    //   printf("%d", numPipes);
-    //   for(;numPipes > 0; numPipes--){
-    //      //printf("HERE");
-    //      //cmdTok = strtok(NULL, delimeters);
-    //      printf("%s\n", cmdTok);
-    //   }
-    //   isPipe = 0;
-    // }
 
-    if(isPipe != 1)
-      cmdTok = strtok(NULL, delimeters);
-    else 
-      isPipe = 0;
+    // if(isPipe != 1){
+    //   cmdTok = strtok(NULL, delimeters);
+    //   isPipe = 0; 
+    // }
+    // else 
+    //   cmdTok = strtok(NULL, delimeters);
     memset(&tempCmdTok[0], 0, strlen(tempCmdTok));
   }
 
@@ -147,90 +126,6 @@ void parse_command(char *command, commandType *comm){
 
   free(prevTempCmdTok);
 }
-
-//sets the pipes with the appropriate string token command
-void set_pipes(char cmd[], commandType *cmdType){
-  /** echo | a.out"  **/
-  
-  char *pipeDelim, *tok, *cpyArr, *prevTmpCmdTok;
-  char cmdArrCpy[strlen(cmd)+1];
-  char tmpCmdTok[strlen(cmd+1)];
-  int pipeLocation;
-
-  pipeDelim="|&>";
-  memcpy(cmdArrCpy, cmd, strlen(cmd));
-  cmdArrCpy[strlen(cmd)] = '\0';
-  cpyArr = strdup(cmdArrCpy);
-  //printf("%s\n%s\n", cmd, cmdArrCpy);
-  tok = strtok(cmdArrCpy, pipeDelim);
-  memset(&tmpCmdTok[0], 0, strlen(tmpCmdTok));
-
-  while(tok){
-    pipeLocation = tok - cmdArrCpy + strlen(tok);
-   
-    
-
-    strncpy(tmpCmdTok, &cpyArr[tok - cmdArrCpy], strlen(tok)+1); 
-    tmpCmdTok[strlen(tok)] = '\0';
-    cmdType->CmdArray[cmdType->numPipes] = *parse(tmpCmdTok);
-    cmdType->numPipes++; 
-    memset(&tmpCmdTok[0], 0, strlen(tmpCmdTok));
-    printf("%c\nHelo",cpyArr[pipeLocation+strlen(tok)]);
-    print_info(&cmdType->CmdArray[0]);
-
-    //strlen(command) - (locCmdType-strlen(cmdTok))+1
-    if(cpyArr[pipeLocation+strlen(tok)] == '>') { 
-      tok = strtok(NULL, pipeDelim);
-      printf("\nSample: %s \n",tok);
-      strncpy(tmpCmdTok, &cpyArr[pipeLocation+strlen(tok)+1], strlen(tok)+1);
-      prevTmpCmdTok = trimWhiteSpaces(tmpCmdTok);
-      cmdType->isOutFile = 1; 
-      strncpy(cmdType->outFile, prevTmpCmdTok, strlen(prevTmpCmdTok));
-      printf("\nSSS: ---%s---\n", prevTmpCmdTok);
-      tok = strtok(NULL, pipeDelim);
-      
-    
-      if(tok != NULL){
-        print_error(UNKNOWN_CMD);
-        return;
-      }
-
-      break;
-      
-    }
-    tok = strtok(NULL, pipeDelim);
-
-  }
-
-
-  cpyArr = trimWhiteSpaces(cpyArr); //time-consuming 
-  if(cpyArr[strlen(cpyArr)-1] == '&'){
-    cmdType->isBackground = 1;
-  }
-  //pipeLocation = tok - cmdArrCpy;
-  //printf("Here1111, %s %d %c xx\n", &cpyArr[pipeLocation], pipeLocation, cpyArr[pipeLocation]);
-  // if(cpyArr[pipeLocation] == '>'){
-  //     printf("Here, %s\n", cpyArr);
-
-  //     strncpy(tmpCmdTok, &cpyArr[pipeLocation+strlen(tok)], strlen(tok)+1); 
-      
-  //     printf("%s\n",  &cpyArr[pipeLocation]);
-  //     tmpCmdTok[strlen(tok)] = '\0';
-  //     prevTmpCmdTok = trimWhiteSpaces(tmpCmdTok);
-  //     printf("%s %s", prevTmpCmdTok, tmpCmdTok);
-  //     strncpy(cmdType->outFile, prevTmpCmdTok, strlen(prevTmpCmdTok));
-  //     cmdType->isOutFile = 1;
-  //     return;
-  //   }
-  //   if(cpyArr[pipeLocation] == '&'){
-  //     cmdType->isBackground = 1;
-  //     return;
-  //   }
- 
-}
-
-
-
 
 char* trimWhiteSpaces(char* str){
   char* end; 
@@ -340,28 +235,10 @@ int main(void){
   char* command = "input112 < echo > output &   ";
   char* commandPipe = "ls -l | grep \"Apr\" > output &";
 
-
-
-  // printf("hello");
-
-  // info = parse("cd\n"); 
-  // printf("%s", info->command); 
-
-  // int i; 
-  // for(i = 0; i < info->argVarNum; i++){
-  //   printf("%s\n", info->ArgVarList[i]); 
-  // }
-
-  // printf("%s %d", getenv("HOME"), chdir("../"));
-  // system("ls");
   type = malloc(sizeof(commandType));
   type2 = malloc(sizeof(commandType));
   //parse_command(command, type2);
   parse_command(commandPipe, type);
-
-// printf("%s %s %d\n", type2->inFile, type2->outFile, type2->isBackground);
-
-  //printf("%d", type->numPipes);
 
 
 
@@ -371,7 +248,7 @@ int main(void){
     print_info(&type->CmdArray[i]);
   }
 
-  printf("\n%s %d\n", type->outFile, type->isBackground);
+  printf("\n\n%s %d\n", type->outFile, type->isBackground);
 
   free(type);
   free(type2);
