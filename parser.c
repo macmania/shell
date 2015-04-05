@@ -15,7 +15,7 @@ void init_info(struct parseInfo *p){
 //still need to test with all of the base cases
 void parse_command(char *command, commandType *comm){
   char *cmdTok, *delimeters, *cpyPtr;
-  char *prevTempCmdTok = malloc(sizeof(char));
+  char *prevTempCmdTok;// = malloc(sizeof(char));
   char tempCmdTok[strlen(command)+1];
   int lenCommandStr=strlen(command)+1, locCmdType;
   char commandArrCopy[lenCommandStr];
@@ -38,7 +38,7 @@ void parse_command(char *command, commandType *comm){
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
     commandType = cpyPtr[locCmdType];
-    printf("%s %c\t\n", cmdTok, commandType);
+  //  printf("%s %c\t\n", cmdTok, commandType);
     switch(commandType) {
       
       case '<': //redirect input file to the next command
@@ -70,7 +70,7 @@ void parse_command(char *command, commandType *comm){
           print_error(NO_FILE_ENTERED);
           return;
         }
-        printf("%s\n", tempCmdTok);
+        //printf("%s\n", tempCmdTok);
         strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added+ 1
         tempCmdTok[strlen(cmdTok)] = '\0';
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
@@ -80,7 +80,7 @@ void parse_command(char *command, commandType *comm){
           print_error(UNKNOWN_CMD);
           return;
         }
-        printf("HERE %s \n", cmdTok);
+        //printf("HERE %s \n", cmdTok);
         comm->isOutFile=1;
         strncpy(comm->outFile, prevTempCmdTok, strlen(prevTempCmdTok));
         break;
@@ -93,8 +93,8 @@ void parse_command(char *command, commandType *comm){
         cmdTok = strtok(NULL, delimeters);
         strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
         tempCmdTok[strlen(cmdTok)] = '\0';
-        strncpy(prevTempCmdTok, tempCmdTok, strlen(tempCmdTok)+1);
-        printf("\n---- Hello: %d\n", comm->numPipes);
+        
+        //strncpy(prevTempCmdTok, tempCmdTok, strlen(tempCmdTok)+1);
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
         comm->CmdArray[comm->numPipes] = *parse(prevTempCmdTok);
         comm->numPipes++;
@@ -105,17 +105,11 @@ void parse_command(char *command, commandType *comm){
 
       case '&':
         comm->isBackground = 1;
-        return;
-      //  break;
+        //return;
+        break;
     }
 
-
-    // if(isPipe != 1){
-    //   cmdTok = strtok(NULL, delimeters);
-    //   isPipe = 0; 
-    // }
-    // else 
-    //   cmdTok = strtok(NULL, delimeters);
+    cmdTok = strtok(NULL, delimeters);
     memset(&tempCmdTok[0], 0, strlen(tempCmdTok));
   }
 
@@ -124,7 +118,6 @@ void parse_command(char *command, commandType *comm){
     comm->isBackground = 1;
   }
 
-  free(prevTempCmdTok);
 }
 
 char* trimWhiteSpaces(char* str){
@@ -149,6 +142,7 @@ struct parseInfo* parse (char* cmdLine){
   struct parseInfo* result; 
   result = malloc(sizeof(struct parseInfo));  
   strcpy(tmpCmd, cmdLine);
+  tmpCmd[strlen(cmdLine)] = '\0';
   init_info(result); 
 
   if(result == NULL){
@@ -156,19 +150,53 @@ struct parseInfo* parse (char* cmdLine){
     return NULL; 
   }
 
-  tokCmds = strtok(tmpCmd, " \n"); 
-  memcpy(result->command, tokCmds, strlen(tokCmds)); //maybe add a method to further wrap the initialization process better
+
+  int next = 0, past = 0, i=0; 
+
+  for(; tmpCmd[next] != ' '; next++);
+  memcpy(result->command, &tmpCmd[past], next-past);
+  past = next;
+  next++;
+ // printf("%s %d\n", result->command, next);
 
 
-  // //still need to do the piping cmd
-  int i = 0; 
-  while((tokCmds = strtok(NULL, " \n"))){
-    result->ArgVarList[i] = malloc(sizeof(char));
-    strncpy(result->ArgVarList[i], tokCmds, strlen(tokCmds));
-    i++; 
+  for(; next < strlen(cmdLine); next++){
+    if(tmpCmd[next] == ' '){
+      result->ArgVarList[i] = malloc(sizeof(char));
+      memcpy(result->ArgVarList[i], &tmpCmd[past], next-past);
+      //printf("%s %d\n",&tmpCmd[past], next-past);
+      past = next; 
+      //printf("%s\n",result->ArgVarList[i]);
+      i++;
+    } 
   }
 
-  result->argVarNum = i; 
+  if(past != next){
+    result->ArgVarList[i] = malloc(sizeof(char));
+    memcpy(result->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
+    //printf("%s\n",result->ArgVarList[i]);
+    i++;
+
+  }
+  // printf("\nRESULT----");
+  // print_info(result);
+  // printf("\n----");
+  result->argVarNum = i;
+
+
+  // tokCmds = strtok(tmpCmd, " \n"); 
+  // memcpy(result->command, tokCmds, strlen(tokCmds)); //maybe add a method to further wrap the initialization process better
+
+
+  // // //still need to do the piping cmd
+  // int i = 0; 
+  // while((tokCmds = strtok(NULL, " \n"))){
+  //   result->ArgVarList[i] = malloc(sizeof(char));
+  //   strncpy(result->ArgVarList[i], tokCmds, strlen(tokCmds));
+  //   i++; 
+  // }
+
+  // result->argVarNum = i; 
   
   return result; 
 }
@@ -237,18 +265,22 @@ int main(void){
 
   type = malloc(sizeof(commandType));
   type2 = malloc(sizeof(commandType));
-  //parse_command(command, type2);
+  parse_command(command, type2);
   parse_command(commandPipe, type);
 
 
 
-  int i; 
+   int i; 
   for(i=0; i < type->numPipes; i++){
-    printf("\n");
+   
     print_info(&type->CmdArray[i]);
+    //print_info(&type2->CmdArray[i]);
+    printf("------\n------");
   }
 
-  printf("\n\n%s %d\n", type->outFile, type->isBackground);
+
+
+  //printf("\n\n%s %d\n", type->outFile, type->isBackground);
 
   free(type);
   free(type2);
