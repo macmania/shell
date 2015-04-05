@@ -79,6 +79,11 @@ void parse_command(char *command, commandType *comm){
       case '|': //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
         cmdTok = strtok(NULL, delimeters);
+        if(tempCmdTok == NULL){
+          //may need to change some stuff or so 
+          print_error(UNKNOWN_CMD);
+          return;
+        }
         strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
         tempCmdTok[strlen(cmdTok)] = '\0';
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
@@ -158,7 +163,6 @@ struct parseInfo* parse (char* cmdLine){
   }
   result->argVarNum = i;
 
-  
   return result; 
 }
 
@@ -167,7 +171,7 @@ void print_info(struct parseInfo *info){
     return;
   }
 
-  printf("%s ", info->command); 
+  printf("command: %s ", info->command); 
 
   int i; 
   for(i = 0; i < info->argVarNum; i++){
@@ -214,7 +218,7 @@ void print_error(enum error_msg_parse msg) {
 }
 
 //tests the methods, not yet adept in using test cases
-//**
+/**
 int main(void){
   struct parseInfo* info; 
   commandType* type, *type2; 
@@ -227,23 +231,22 @@ int main(void){
   parse_command(command, type2);
   parse_command(commandPipe, type);
 
-
-
-   int i; 
+  int i; 
   for(i=0; i < type->numPipes; i++){
    
     print_info(&type->CmdArray[i]);
     //print_info(&type2->CmdArray[i]);
-    printf("------\n------");
+    printf("\n");
   }
 
+ 
 
 
-  //printf("\n\n%s %d\n", type->outFile, type->isBackground);
+  printf("\nin: %s out: %s bg: %d\n", type2->inFile, type2->outFile, type2->isBackground);
 
   free(type);
   free(type2);
 
   return 0; 
 }
-/**/
+*/
