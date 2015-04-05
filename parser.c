@@ -7,24 +7,18 @@
 #include <ctype.h> 
 void init_info(struct parseInfo *p){
   p->command = malloc(sizeof(char)); 
-  p->argVarNum = 0; //unitialize for now
+  p->argVarNum = 0;
 }
-
 
 //parses each of the tokens given the command
 //still need to test with all of the base cases
 void parse_command(char *command, commandType *comm){
   char *cmdTok, *delimeters, *cpyPtr;
-  char *prevTempCmdTok;// = malloc(sizeof(char));
+  char *prevTempCmdTok;
   char tempCmdTok[strlen(command)+1];
   int lenCommandStr=strlen(command)+1, locCmdType;
   char commandArrCopy[lenCommandStr];
   char commandType; 
-
-
-  /*Temporary variables until determined*/
-  int isPipe = -1; //temporary variable to ensure that the out command type is not valid once
-                  //in pipe 
 
   delimeters = "&><|";
   strncpy(commandArrCopy, command, lenCommandStr);
@@ -38,7 +32,7 @@ void parse_command(char *command, commandType *comm){
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
     commandType = cpyPtr[locCmdType];
-  //  printf("%s %c\t\n", cmdTok, commandType);
+
     switch(commandType) {
       
       case '<': //redirect input file to the next command
@@ -59,7 +53,6 @@ void parse_command(char *command, commandType *comm){
 
         strncpy(comm->inFile, prevTempCmdTok, strlen(prevTempCmdTok));
         comm->isInFile=1;
-       // printf("%s %s\n", prevTempCmdTok, nextCmdTok);
         break; 
 
       case '>': //redirect output to specified file, signals the end of the command
@@ -70,42 +63,32 @@ void parse_command(char *command, commandType *comm){
           print_error(NO_FILE_ENTERED);
           return;
         }
-        //printf("%s\n", tempCmdTok);
         strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added+ 1
         tempCmdTok[strlen(cmdTok)] = '\0';
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
-       // strncpy(, trimWhiteSpaces(tempCmdTok), strlen(tempCmdTok)); 
 
         if(!is_proper_file(prevTempCmdTok)){
           print_error(UNKNOWN_CMD);
           return;
         }
-        //printf("HERE %s \n", cmdTok);
+
         comm->isOutFile=1;
         strncpy(comm->outFile, prevTempCmdTok, strlen(prevTempCmdTok));
         break;
 
       case '|': //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
-        
-
-        //Error here
         cmdTok = strtok(NULL, delimeters);
         strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
         tempCmdTok[strlen(cmdTok)] = '\0';
-        
-        //strncpy(prevTempCmdTok, tempCmdTok, strlen(tempCmdTok)+1);
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
         comm->CmdArray[comm->numPipes] = *parse(prevTempCmdTok);
         comm->numPipes++;
 
-        isPipe = 1; 
-      
         break;
 
       case '&':
         comm->isBackground = 1;
-        //return;
         break;
     }
 
@@ -157,16 +140,12 @@ struct parseInfo* parse (char* cmdLine){
   memcpy(result->command, &tmpCmd[past], next-past);
   past = next;
   next++;
- // printf("%s %d\n", result->command, next);
-
 
   for(; next < strlen(cmdLine); next++){
     if(tmpCmd[next] == ' '){
       result->ArgVarList[i] = malloc(sizeof(char));
       memcpy(result->ArgVarList[i], &tmpCmd[past], next-past);
-      //printf("%s %d\n",&tmpCmd[past], next-past);
       past = next; 
-      //printf("%s\n",result->ArgVarList[i]);
       i++;
     } 
   }
@@ -174,29 +153,11 @@ struct parseInfo* parse (char* cmdLine){
   if(past != next){
     result->ArgVarList[i] = malloc(sizeof(char));
     memcpy(result->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
-    //printf("%s\n",result->ArgVarList[i]);
     i++;
 
   }
-  // printf("\nRESULT----");
-  // print_info(result);
-  // printf("\n----");
   result->argVarNum = i;
 
-
-  // tokCmds = strtok(tmpCmd, " \n"); 
-  // memcpy(result->command, tokCmds, strlen(tokCmds)); //maybe add a method to further wrap the initialization process better
-
-
-  // // //still need to do the piping cmd
-  // int i = 0; 
-  // while((tokCmds = strtok(NULL, " \n"))){
-  //   result->ArgVarList[i] = malloc(sizeof(char));
-  //   strncpy(result->ArgVarList[i], tokCmds, strlen(tokCmds));
-  //   i++; 
-  // }
-
-  // result->argVarNum = i; 
   
   return result; 
 }
@@ -251,8 +212,6 @@ void print_error(enum error_msg_parse msg) {
       break;
   }
 }
-
-
 
 //tests the methods, not yet adept in using test cases
 //**
