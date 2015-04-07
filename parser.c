@@ -143,6 +143,8 @@ struct parseInfo* parse (char* cmdLine){
 
   for(; tmpCmd[next] != ' '; next++);
   memcpy(result->command, &tmpCmd[past], next-past);
+  result->ArgVarList[i] = malloc(sizeof(char)); 
+  i++;
   past = next;
   next++;
 
@@ -159,8 +161,8 @@ struct parseInfo* parse (char* cmdLine){
     result->ArgVarList[i] = malloc(sizeof(char));
     memcpy(result->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
     i++;
-
   }
+  result->ArgVarList[i] = NULL;
   result->argVarNum = i;
 
   return result; 

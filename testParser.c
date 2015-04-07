@@ -110,10 +110,4 @@ char* getLine(void){
 
 }
 
-int is_proper_file(char* fileName){
-  
-  for(;*fileName;fileName++){
-    if(isspace(*fileName)) return 0;
-  }
-  return 1;
-}
+

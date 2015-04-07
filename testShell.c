@@ -1,4 +1,5 @@
 //temporary holder for shell.c
+//Handling signal interruption
 
 #include <stdio.h>
 #include <unistd.h>
@@ -12,13 +13,16 @@
 int main(void) {
 	pid_t childPid; 
 	int childStatus; 
-	char *args[3];
+	char *args[3][10];
+	char *temp[2]; temp[0] = "ls"; temp[1]=NULL;
 
-	args[0] = "ls"; args[1] = "-l"; args[2] = NULL;
+	args[0][0] = "ls"; args[0][1] = "-l"; args[0][2] = NULL;
+	printf("%s\n%s\n%s\n", *(args[0]), args[0][1], args[0][2]);
+
 	childPid = fork(); 
 
 	if(childPid == 0) {
-		execvp(args[0], args);
+		execvp("ls", temp);
 		printf("unknown command\n");
 		exit(0);
 	}	
