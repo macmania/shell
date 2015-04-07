@@ -12,10 +12,21 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
+#include "process_list.h"
 
 int main (int argc, char** argv) {
   printPrompt();
   //add a list that adds commands to the list
+  
+  signal(SIGCHLD, handleSigChld);
+  signal(SIGCONT, handleSigCont);
+  signal(SIGSTP, handleSigStp);
+  signal(SIGSTOP,handleSigStop);
+  signal(SIGTTIN, handleSigTTin);
+  signal(SIGTTOU, handleSigTTou);
+  signal(SIGINT, handleSigInt);
+
+
   while(1) {
     int childPid; 
     char* cmdLine;
@@ -49,6 +60,36 @@ int main (int argc, char** argv) {
   }
 }
 
+
+/**** Signal handlers **/
+void handleSigChld(int signal) {
+  
+}
+
+void handleSigCont(int signal) {
+
+}
+
+//Can't be handled, ignored or blocked
+void handleSigStp(int signal) {
+
+} 
+
+//Can be handled, etc.
+void handleSigStop(int signal) {
+
+}  
+
+//terminal access
+void handleSigTTin(int signal) {
+
+} 
+void handleSigTTou(int signal) {
+
+}
+void handleSigInt(int signal) {
+
+}
 
 void waitPid(int pid) {
 
@@ -196,6 +237,7 @@ void execCmd(struct parseInfo* cmd) {
 
 }
 
+/*** Need to change this portion here **/
 bool isBgJob(struct parseInfo* cmd) {
   return false; 
 }

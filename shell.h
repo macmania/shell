@@ -13,6 +13,20 @@ BUILT_IN_COMMAND { NOT_BLT_CMD=0, JOBS, CD, HISTORY, EXIT, KILL };
 enum 
 Error_Messages {LESS_NUM_ARGS=0, MORE_NUM_ARGS, NEED_NUMERIC_ARG, FILE_NAME_INCOR};
 
+
+	//Foreground is ready
+
+/** Signal handlers **/
+void handleSigChld(int);
+void handleSigCont(int);
+void handleSigStp(int); //Can't be handled, ignored or blocked
+void handleSigStop(int); //Can be handled, etc. 
+void handleSigTTin(int); //terminal access
+void handleSigTTou(int);
+void handleSigInt(int);
+/** End signal handlers **/
+
+/* Helper methods **/
 void printPrompt();
 char* readCmdLine();
 bool isBltInCmd();
