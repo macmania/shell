@@ -39,9 +39,10 @@ typedef struct job {
 }job; 
 
 job* find_job(pid_t); 
-job_is_stopped(job*);
-job_is_completed(job*);
+int is_job_stopped(job*);
+int is_job_completed(job*);
 void add_job(job*); 
-int delete_job(job*); //returns 0 or 1 if job was successfully 
+int delete_job(pid_t pgid); //returns 0 or 1 if job was successfully 
 						//deleted in the job pipeline and freed 
 					//successfully 
+void parse_job()

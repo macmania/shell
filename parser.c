@@ -79,13 +79,13 @@ void parse_command(char *command, commandType *comm){
       case '|': //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
         cmdTok = strtok(NULL, delimeters);
+        strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
+        tempCmdTok[strlen(cmdTok)] = '\0';
         if(tempCmdTok == NULL){
           //may need to change some stuff or so 
           print_error(UNKNOWN_CMD);
           return;
         }
-        strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
-        tempCmdTok[strlen(cmdTok)] = '\0';
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
         comm->CmdArray[comm->numPipes] = *parse(prevTempCmdTok);
         comm->numPipes++;
@@ -220,7 +220,7 @@ void print_error(enum error_msg_parse msg) {
 }
 
 //tests the methods, not yet adept in using test cases
-/**
+//**
 int main(void){
   struct parseInfo* info; 
   commandType* type, *type2; 
@@ -251,4 +251,4 @@ int main(void){
 
   return 0; 
 }
-*/
+//*/
