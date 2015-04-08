@@ -31,10 +31,12 @@ void printPrompt();
 char* readCmdLine();
 bool isBltInCmd();
 void execBltInCmd(struct parseInfo*);
-void execCmd(struct parseInfo*);
+void launchProcess(struct parseInfo*);
 bool isBgJob(struct parseInfo*); //goes through a linked list to see if the command is paused
 void waitPid(int);
 bool isCmdEmpty(char*); 
 void printErrMsg(enum Error_Messages, char*);
 //#endif
+
+
 

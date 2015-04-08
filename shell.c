@@ -14,10 +14,24 @@
 #include <signal.h>
 #include "process_list.h"
 
+//Global variables that keep track of parent group id and child id
+//pid_t parentId, childID, status; //potential race condition here, might need to look this further
+            //data-race condition??
+
 int main (int argc, char** argv) {
+  struct sigaction sa; 
+
   printPrompt();
   //add a list that adds commands to the list
+
+  //These are the signals that need to be handled appropriately
+  //by the job scheduler
+  sa.sa_handler = signalHandler;
+  sigemptyset(&sa.sa_mask); //not sure what this does, or the reason for it
+  sa.sa_flags = SA_RESTART /* restart function if interrupted by handler */
+
   
+
   signal(SIGCHLD, handleSigChld);
   signal(SIGCONT, handleSigCont);
   signal(SIGSTP, handleSigStp);
@@ -46,9 +60,10 @@ int main (int argc, char** argv) {
       execBltInCmd(cmd); //stop, etc.
     } 
     else {
+        //need to put this somewhere else
         childPid = fork();
         if(childPid == 0) {
-          execCmd(cmd); //calls execvp
+          launchProcess(cmd); //calls execvp
         } else {
           if(isBgJob(cmd)) {
             //record in a list of background jobs
@@ -61,35 +76,14 @@ int main (int argc, char** argv) {
 }
 
 
-/**** Signal handlers **/
-void handleSigChld(int signal) {
-  
-}
+//provides more context to the group id and such
+void signalHandler(int signal siginfo_t *si, void *context) {
+  switch(signal){ //handles all of the signals
 
-void handleSigCont(int signal) {
-
-}
-
-//Can't be handled, ignored or blocked
-void handleSigStp(int signal) {
-
-} 
-
-//Can be handled, etc.
-void handleSigStop(int signal) {
-
+  }
 }  
 
-//terminal access
-void handleSigTTin(int signal) {
 
-} 
-void handleSigTTou(int signal) {
-
-}
-void handleSigInt(int signal) {
-
-}
 
 void waitPid(int pid) {
 
@@ -233,8 +227,8 @@ void execBltInCmd(struct parseInfo* cmd) {
 
 
 
-void execCmd(struct parseInfo* cmd) {
-
+void launchProcess(struct parseInfo* cmd) {
+  
 }
 
 /*** Need to change this portion here **/
