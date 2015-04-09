@@ -1,5 +1,5 @@
 /**
-	Need to dynamically change the size of the arg var list somehow
+* Need to dynamically change the size of the arg var list in the future. 
 */
 
 #define MAX_VAR_NUM 10
@@ -39,7 +39,6 @@ typedef struct {
   char inFile[FILE_MAX_NUM];
   char outFile[FILE_MAX_NUM];
 }commandType;
-
 
 
 void init_info(struct parseInfo*);
