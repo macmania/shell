@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
 #include "JobControl.h"
 //Implementation of methods in job control
 //Temporary job control
-volatile job *firstJob; 
+volatile job *firstJob, *lastJob; 
 volatile int size;
 
 
@@ -15,30 +16,38 @@ void init_process(process* p) {
 //need to call parse_job first before adding the job. 
 //makes this confusing if not handled appropriately
 void add_job(job* newJob){
-	if(newJob == NULL)
+	if(newJob == NULL){
 		return; 
+	}
 
 	if(firstJob == NULL){
 		firstJob = malloc(sizeof(job));
+		lastJob = malloc(sizeof(job));
 		firstJob->next = newJob; 
+		printf("add_job: %d\n",newJob->pgid);
 		newJob->previous = (job*)firstJob;
-		newJob->next = NULL; //this is the last
+		newJob->next = (job*)lastJob; //this is the last
 	}
 	else{
 		job *temp = firstJob->next; 
-		temp->next = newJob; 
-		newJob->previous = temp; 
+		temp->previous = newJob; 
+		newJob->next = temp; 
 		firstJob->next=newJob;
 	}
 	size++; 
 }
 
 //have to look for the actual job
+//To-do, finish this part
 int delete_job(pid_t pgid) {
 	job* j = find_job(pgid);
 
 	if(j == NULL) //pgid does not exist
 		return 0; 
+
+
+	//deleting jobs is a bit tricky since there are so many options that might
+	//happen
 
 	job* temp = j->previous; 
 	temp->next = j->next; 
@@ -50,13 +59,11 @@ int delete_job(pid_t pgid) {
 }
 
 job* find_job(pid_t pgid){
-	job *head, *returnJob;
+	job *head;
 
-	for(head = firstJob; head; head = head->next) {
+	for(head = (job*) *(&firstJob->next); head; head = head->next) {
 		if(head->pgid == pgid) {
-			printf("HERE"); 
-			returnJob = head; 
-			return returnJob;
+			return head;
 		}
 	}
 	return NULL; 
@@ -85,7 +92,8 @@ void free_job(job* j){
 /** utility functions that will be used to operate on job objects **/
 int is_job_stopped(job *head){
 	process *temp; 
-	for(temp = (job*)head; temp; temp = head->next)
+
+	for(temp = (process*)head; temp; temp = temp->next)
 		if(!temp->completed && !temp->stopped)
 			return 0; 
 	return 1; 
@@ -93,7 +101,7 @@ int is_job_stopped(job *head){
 
 int is_job_completed(job *head){
 	process *p; 
-	for(p = (job*)head->firstProcess; p; p = head->next)
+	for(p = (process*)head->firstProcess; p; p = p->next)
 		if(!p->completed)
 			return 0; 
 	return 1; 

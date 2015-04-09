@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>//#include "parser.h"
+#include <unistd.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
@@ -18,31 +18,45 @@
 
 //Global variables that keep track of parent group id and child id
 //pid_t parentId, childID, status; 
-s//potential race condition here, might need to look this further
+//potential race condition here, might need to look this further
             //data-race condition??
+void signalHandler(int, siginfo_t*, void*);
+void signalHandlerList(int, siginfo_t*, void*);
+
 
 int main (int argc, char** argv) {
   struct sigaction sa; 
-
+  struct sigaction saList; //this sigaction deals with sigint and sigstp
+                        //ensures that data is not touched
   printPrompt();
   //add a list that adds commands to the list
 
   //These are the signals that need to be handled appropriately
   //by the job scheduler
   sa.sa_handler = signalHandler;
-  sigemptyset(&sa.sa_mask); //not sure what this does, or the reason for it
-  sa.sa_flags = SA_RESTART /* restart function if interrupted by handler */
+  sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
+  sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
 
-  
+  //this deals with signals associated with 
+  sigaction(SIGCHLD, sa, NULL); //a child process being done
+  sigaction(SIGCONT, sa, NULL); //a process that is sent to be continued
+  sigaction(SIGTTIN, sa, NULL); //terminal access signal
+  sigaction(SIGTTOU, sa, NULL); //terminal access signal
 
-  signal(SIGCHLD, handleSigChld);
-  signal(SIGCONT, handleSigCont);
-  signal(SIGSTP, handleSigStp);
-  signal(SIGSTOP,handleSigStop);
-  signal(SIGTTIN, handleSigTTin);
-  signal(SIGTTOU, handleSigTTou);
-  signal(SIGINT, handleSigInt);
+  //The list needs to be added and removed, make sure no signals
+  //are blocked
+  saList.sa_handler = signalHandlerList;
+  sigemptyset(&sa.sa_mask);
 
+  /*Block all other terminal-generated signals**/
+  sigaddset(&block_mask, SIGCHLD);
+  sigaddset(&block_mask, SIGCONT);
+  sigaddset(&block_mask, SIGTTIN);
+  sigaddset(&block_mask, SIGTTOUT);
+
+  saList.sa_flags = SA_RESTART;
+  sigaction(SIGINT, signalHandlerList, NULL);
+  sigaction(SIGSTP, signalHandlerList, NULL);
 
   while(1) {
     int childPid; 
@@ -71,26 +85,42 @@ int main (int argc, char** argv) {
           if(isBgJob(cmd)) {
             //record in a list of background jobs
           } else {
-            waitPid(childPid);
+            waitpid(childPid);
           }
         }
     }
   }
 }
 
-
 //provides more context to the group id and such
-void signalHandler(int signal siginfo_t *si, void *context) {
-  switch(signal){ //handles all of the signals
-
+void signalHandler(int s, siginfo_t *si, void *context) {
+  switch(s){ //handles all of the signals
+    case SIGCHLD:
+      //wait until the child process is done and delete it from the list
+      break;
+    case SIGCONT: 
+      //send the signal to the job and add it to the list
+      break; 
+    case SIGTTIN: 
+      //determine the termios
+      break; 
+    case SIGTTOU:
+      //determine the termios
+      break;
   }
-}  
-
-
-
-void waitPid(int pid) {
-
 }
+
+
+void signalHandlerList(int s, siginfo_t *si, void *context) {
+  switch(s){
+    case SIGINT: //kill this job and remove from the list
+      break;
+    case SIGSTP: //put in foreground
+      break;
+  }
+}
+
+
 
 void printPrompt(){
   printf("Welcome to Jojo's small scale shell\n");
@@ -220,16 +250,12 @@ void execBltInCmd(struct parseInfo* cmd) {
 
   }
   
-  else {
+  else 
     printErrMsg(LESS_NUM_ARGS, command); 
-  }
-
-
- 
 }
 
 
-
+//call execvp here 
 void launchProcess(struct parseInfo* cmd) {
   
 }
