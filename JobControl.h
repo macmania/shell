@@ -3,7 +3,8 @@
 	List that stores the process information. 
 	This is the basis for job control
 **/
-#include "parser.h"
+#include <termios.h>
+
 enum
 Process_State {
 	FOREGROUND=0, 
@@ -45,4 +46,7 @@ void add_job(job*);
 int delete_job(pid_t pgid); //returns 0 or 1 if job was successfully 
 						//deleted in the job pipeline and freed 
 					//successfully 
-void parse_job()
+int get_size(void);
+void free_process(process*);
+void free_job(job*);
+

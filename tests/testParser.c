@@ -2,11 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> 
-//#include "parser.h"
+#include "/Users/jojofabe/Workspace/c/shell/Parser.h"
 
-
-char* getLine(void);
-int is_proper_file(char*);
 int main(int argc, char** arg) {
   // char* sampleChar;
   // char str[256];

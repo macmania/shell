@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include "/Users/jojofabe/Workspace/c/shell/Shell.h"
 
 int main(void) {
 	pid_t childPid; 
@@ -42,21 +43,5 @@ int main(void) {
 
 }
 
-/*
-	2nd Variation 
-		if(childPid == (pid_t)-1){
-			printf("Error"); 
-			exit(EXIT_FAILURE);
-		}
-		else{
-			
-			tpid = wait(&childStatus);
-			printf("Parent: child %d exited with status: %d\n", tpid, childStatus);
-			
-			return childStatus;
-		}
-
-****
-*/
 
 

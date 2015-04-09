@@ -4,18 +4,21 @@
   unix like shell (be able to handle fork and parent stuff)
   Part 2: handle multi-threading
 **/
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "shell.h" //to-do need to put this in a directory
 #include <unistd.h>//#include "parser.h"
 #include <sys/stat.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include "process_list.h"
+#include "JobControl.h"
+#include "Shell.h" //to-do need to put this in a directory
+#include "Parser.h"
 
 //Global variables that keep track of parent group id and child id
-//pid_t parentId, childID, status; //potential race condition here, might need to look this further
+//pid_t parentId, childID, status; 
+s//potential race condition here, might need to look this further
             //data-race condition??
 
 int main (int argc, char** argv) {

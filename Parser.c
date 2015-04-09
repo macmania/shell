@@ -220,7 +220,7 @@ void print_error(enum error_msg_parse msg) {
 }
 
 //tests the methods, not yet adept in using test cases
-//**
+/**
 int main(void){
   struct parseInfo* info; 
   commandType* type, *type2; 
@@ -251,4 +251,4 @@ int main(void){
 
   return 0; 
 }
-//*/
+*/
