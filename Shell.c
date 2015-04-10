@@ -18,8 +18,9 @@
 
 //Global variables that keep track of parent group id and child id
 //pid_t parentId, childID, status; 
-//potential race condition here, might need to look this further
-            //data-race condition??
+	/**potential race condition here, might need to look this further**/
+            //data-race condition
+
 void signalHandler(int, siginfo_t*, void*);
 void signalHandlerList(int, siginfo_t*, void*);
 
@@ -49,83 +50,129 @@ int main (int argc, char** argv) {
   sigemptyset(&sa.sa_mask);
 
   /*Block all other terminal-generated signals**/
-  sigaddset(&block_mask, SIGCHLD);
-  sigaddset(&block_mask, SIGCONT);
-  sigaddset(&block_mask, SIGTTIN);
-  sigaddset(&block_mask, SIGTTOUT);
+  sigaddset(&sa.sa_mask, SIGCHLD); //child has exited or terminated
+  sigaddset(&sa.sa_mask, SIGCONT); //tells the process to continue processing
+  sigaddset(&sa.sa_mask, SIGTTIN); //bg process attempts to read from terminal, this is sent to that process
+  sigaddset(&sa.sa_mask, SIGTTOU); /**bg process attempts to write from terminal or set its terminal modes
+  	  	  	  	  	  	  	  	    , this is sent to that process **/
 
   saList.sa_flags = SA_RESTART;
   sigaction(SIGINT, signalHandlerList, NULL);
-  sigaction(SIGSTP, signalHandlerList, NULL);
+  sigaction(SIGSTOP, signalHandlerList, NULL);
 
-  while(1) {
-    int childPid; 
-    char* cmdLine;
-    struct parseInfo* cmd; 
-    commandType* cmdType; 
 
-    cmdLine = readCmdLine(); //tokenizes the commands
-    //perhaps record the commands typed in a document
-    if(isCmdEmpty(cmdLine)){
-      continue; 
-    }
-        
-    cmd = parse(cmdLine); 
-    parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
+  int isShellInteractive = 1;
 
-    if (isBltInCmd(cmd)){
-      execBltInCmd(cmd); //stop, etc.
-    } 
-    else {
-        //need to put this somewhere else
-        childPid = fork();
-        if(childPid == 0) {
-          launchProcess(cmd); //calls execvp
-        } else {
-          if(isBgJob(cmd)) {
-            //record in a list of background jobs
-          } else {
-            waitpid(childPid);
-          }
-        }
-    }
+  //Temporary testing the shell.
+  if(isShellInteractive){
+	  /*this is testing purposes solely to test the validity of
+	   * signal handler for SIGCHLD, SIGCONT, SIGTTIN, SIGTTOU,
+	   * SIGINT, SIGSTOP
+	  */
+
+	  /** Wait, for-loop*/
+
+	  /*Make 5 jobs
+	   * - write out the process ID to the terminal for each of the jobs
+	   * - Ctrl-Z the first job (this job is now in the foreground and should be saved in the list)
+	   * - continue with the next job based on the array
+	   * - when the job terminates by (wait) and/or the job is sent Ctrl-C (for loop)
+	   *   this job should be removed from the job_control list and printed out in the terminal
+	   *	 - when the user types the PID of the stopped job, the OS sends a sigcont signal,
+	   *	   thus, this process needs to be removed from the job_control list
+	   *
+	   * To-do: need to investigate how to test out SIGTTOU, SIGTTIN.
+	   *
+	   **/
+  }
+
+  else{
+	  while(1) {
+		int childPid;
+		char* cmdLine;
+		struct parseInfo* cmd;
+		commandType* cmdType;
+
+		cmdLine = readCmdLine(); //tokenizes the commands
+		//perhaps record the commands typed in a document
+		if(isCmdEmpty(cmdLine)){
+		  continue;
+		}
+
+		cmd = parse(cmdLine);
+		parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
+
+		if (isBltInCmd(cmd)){
+		  execBltInCmd(cmd); //stop, etc.
+		}
+		else {
+			//need to put this somewhere else
+			childPid = fork();
+			if(childPid == 0) {
+			  launchProcess(cmd); //calls execvp
+			} else {
+			  if(isBgJob(cmd)) {
+				//record in a list of background jobs
+			  } else {
+				waitpid(childPid);
+			  }
+			}
+		}
+	  }
   }
 }
 
 //provides more context to the group id and such
+/**
+ * Needs more work
+ * */
 void signalHandler(int s, siginfo_t *si, void *context) {
   switch(s){ //handles all of the signals
-    case SIGCHLD:
-      //wait until the child process is done and delete it from the list
+    case SIGCHLD: //Running -> Terminated (history)
+    		while (waitpid((pid_t)(-1), 0, WNOHANG) > 0); //reaps the child process
+    		//wait until the child process is done and delete it from the list
+    		/*Temporary: finds the pid of this job and removes the job from the list
+    		 * and/or change the field*/
       break;
-    case SIGCONT: 
-      //send the signal to the job and add it to the list
+    case SIGCONT:  //Ready -> Running
+    	   //finds the process and send some sort of signal
+    		/*To-do send the signal to the job and add it to the list */
       break; 
     case SIGTTIN: 
-      //determine the termios
+    		/*To-do, process attempts to read from the terminal, the default action is
+    		 * to terminate the process**/
       break; 
     case SIGTTOU:
-      //determine the termios
+      /* To-do, process attempts to write to the terminal or change the termios, default action
+       * is to terminate the process
+       */
       break;
   }
 }
 
-
+/*
+ * Still need to further expand this part
+ * **/
 void signalHandlerList(int s, siginfo_t *si, void *context) {
   switch(s){
-    case SIGINT: //kill this job and remove from the list
-      break;
-    case SIGSTP: //put in foreground
+    case SIGINT: //Running -> Terminate
+    		//kill this job and remove from the list
+    		/* To-do, removes the job from the list in job_control
+    		 * Temporary: add the job in an array of jobs or so that changes
+    		 * dynamically, this signals whether */
+    	break;
+    case SIGSTOP: //Running -> Background/Foreground
+    		//put in foreground
+    		/* To-do, find the job from the list in job_control **/
       break;
   }
 }
-
-
 
 void printPrompt(){
   printf("Welcome to Jojo's small scale shell\n");
 }
 
+/* Reads line in command line */
 char* readCmdLine(void){
   char* line = malloc(100), *linep = line;
   size_t lenMax = 100, len = lenMax;
@@ -198,6 +245,7 @@ void execBltInCmd(struct parseInfo* cmd) {
           break; 
         default: 
           printf("Error %d due to kill command\n", errNum);
+          break;
       }
   }
 
@@ -256,11 +304,12 @@ void execBltInCmd(struct parseInfo* cmd) {
 
 
 //call execvp here 
+//(Running)
 void launchProcess(struct parseInfo* cmd) {
   
 }
 
-/*** Need to change this portion here **/
+/*** Need to change this portion here, argument is not consistent**/
 bool isBgJob(struct parseInfo* cmd) {
   return false; 
 }
