@@ -1,7 +1,7 @@
 ## Synopsis
-	Implementation of shell - a system application for Unix based systems that is able to read and parse commands typed by 
-	the user and execute commands given that they are specified in Unix system. In addition, additional built-in commands
-	are added to this project: kill, exit, history. 
+	Implementation of shell - a system application for Unix based systems that is able to read and parse 
+	commands typed by the user and execute commands given that they are specified in Unix system. 
+	In addition, additional built-in commands are added to this project: kill, exit, history. 
 	
 	In addition, job scheduling mechanism is added to this project. 
 
