@@ -1,5 +1,6 @@
 ## Synopsis
-
+	
+	Implementation of shell - a system application for Unix based systems. Aims to 
 
 ## Design
 

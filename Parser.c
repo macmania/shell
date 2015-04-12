@@ -2,9 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "parser.h"
+#include "Parser.h"
 #include <sys/stat.h>
 #include <ctype.h> 
+
 void init_info(struct parseInfo *p){
   p->command = malloc(sizeof(char)); 
   p->argVarNum = 0;

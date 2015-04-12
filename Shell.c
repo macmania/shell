@@ -14,7 +14,6 @@
 #include <signal.h>
 #include "JobControl.h"
 #include "Shell.h" //to-do need to put this in a directory
-#include "Parser.h"
 
 //Global variables that keep track of parent group id and child id
 //pid_t parentId, childID, status; 
@@ -34,19 +33,19 @@ int main (int argc, char** argv) {
 
   //These are the signals that need to be handled appropriately
   //by the job scheduler
-  sa.sa_handler = signalHandler;
+  sa.sa_sigaction = signalHandler;
   sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
   sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
 
   //this deals with signals associated with 
-  sigaction(SIGCHLD, sa, NULL); //a child process being done
-  sigaction(SIGCONT, sa, NULL); //a process that is sent to be continued
-  sigaction(SIGTTIN, sa, NULL); //terminal access signal
-  sigaction(SIGTTOU, sa, NULL); //terminal access signal
+  sigaction(SIGCHLD, &sa, NULL); //a child process being done
+  sigaction(SIGCONT, &sa, NULL); //a process that is sent to be continued
+  sigaction(SIGTTIN, &sa, NULL); //terminal access signal
+  sigaction(SIGTTOU, &sa, NULL); //terminal access signal
 
   //The list needs to be added and removed, make sure no signals
   //are blocked
-  saList.sa_handler = signalHandlerList;
+  saList.sa_sigaction = &signalHandlerList;
   sigemptyset(&sa.sa_mask);
 
   /*Block all other terminal-generated signals**/
@@ -57,8 +56,8 @@ int main (int argc, char** argv) {
   	  	  	  	  	  	  	  	    , this is sent to that process **/
 
   saList.sa_flags = SA_RESTART;
-  sigaction(SIGINT, signalHandlerList, NULL);
-  sigaction(SIGSTOP, signalHandlerList, NULL);
+  sigaction(SIGINT, &saList, NULL);
+  sigaction(SIGSTOP, &saList, NULL);
 
 
   int isShellInteractive = 1;
@@ -71,6 +70,8 @@ int main (int argc, char** argv) {
 	  */
 
 	  /** Wait, for-loop*/
+	  while(1);
+
 
 	  /*Make 5 jobs
 	   * - write out the process ID to the terminal for each of the jobs
@@ -114,7 +115,7 @@ int main (int argc, char** argv) {
 			  if(isBgJob(cmd)) {
 				//record in a list of background jobs
 			  } else {
-				waitpid(childPid);
+				  waitpid((pid_t)(-1), 0, WNOHANG);
 			  }
 			}
 		}
@@ -160,10 +161,12 @@ void signalHandlerList(int s, siginfo_t *si, void *context) {
     		/* To-do, removes the job from the list in job_control
     		 * Temporary: add the job in an array of jobs or so that changes
     		 * dynamically, this signals whether */
+    	printf("Hi");
     	break;
     case SIGSTOP: //Running -> Background/Foreground
     		//put in foreground
     		/* To-do, find the job from the list in job_control **/
+    	  printf("Hello");
       break;
   }
 }

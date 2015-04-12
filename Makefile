@@ -5,8 +5,8 @@ DEBUG=-g
 all: shell
 
 
-shell:	shell.c shell.h parser.c parser.h 
-	gcc $(CFLAGS) $(DEBUG) shell.c parser.c -o shell
+shell:	Shell.c Shell.h Parser.c Parser.h 
+	gcc $(CFLAGS) $(DEBUG) Shell.c Parser.c -o shell
 clean:
 	rm -f shell *~
 
