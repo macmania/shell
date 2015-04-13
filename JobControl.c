@@ -4,7 +4,7 @@
 #include "JobControl.h"
 //Implementation of methods in job control
 //Temporary job control
-volatile job *firstJob, *lastJob; 
+job **firstJob;//, **lastJob; 
 volatile int size;
 
 
@@ -21,19 +21,25 @@ void add_job(job* newJob){
 	}
 
 	if(firstJob == NULL){
-		firstJob = malloc(sizeof(job));
-		lastJob = malloc(sizeof(job));
-		firstJob->next = newJob; 
-		printf("add_job: %d\n",newJob->pgid);
-		newJob->previous = (job*)firstJob;
-		newJob->next = (job*)lastJob; //this is the last
+		firstJob = (struct job**) malloc(sizeof(struct job));
+		newJob->next = NULL; 
+		newJob->previous = NULL;
+		*firstJob = newJob; 
 	}
-	else{
-		job *temp = firstJob->next; 
-		temp->previous = newJob; 
-		newJob->next = temp; 
-		firstJob->next=newJob;
-		printf("add_job: %d\n",newJob->pgid);
+	// else{ //here-in lies the error
+		
+	// 	// job *temp = firstJob->next; 
+	// 	// temp->next = firstJob->next->next;
+	// 	// temp->previous = newJob; 
+	// 	// newJob->next = temp; 
+	// 	// firstJob->next=newJob;
+	// 	// newJob->previous = (job*)firstJob;
+	// 	printf("add_job: %d\n",newJob->pgid);
+	// }
+	else {
+		(*firstJob)->previous = newJob;
+		newJob->next = *firstJob;
+		*firstJob = newJob;
 	}
 	size++; 
 }
@@ -47,16 +53,16 @@ int delete_job(pid_t pgid) {
 		return 0; 
 
 
-	//case 1: head -> obj -> tail
-	if(j->previous == firstJob){
-		firstJob->next = j->next;
-		j->next->previous = (job*)firstJob;
+	//case 1: head -> obj -> null
+	if(j == *firstJob){
+		*firstJob = j->next; 
 	}
-	//case 2: head-> obj1-> obj2 -> tail
-	else{
-		job* temp = j->previous;
-		temp->next = j->next;
-		j->next->previous = temp;
+	//case 2: head-> obj1-> obj2 -> null
+	else if (j->next != NULL){
+		j->next->previous = j->previous;
+	}
+	else if(j->previous != NULL){
+		j->previous->next = j->next;
 	}
 
 	free_job(j); 
@@ -67,7 +73,7 @@ int delete_job(pid_t pgid) {
 job* find_job(pid_t pgid){
 	job *head;
 
-	for(head = (job*) *(&firstJob->next); head; head = head->next) {
+	for(head = (job*) ((*firstJob)->next); head; head = head->next) {
 		if(head->pgid == pgid) {
 			return head;
 		}
