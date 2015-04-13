@@ -210,7 +210,8 @@ char* readCmdLine(void){
   }
 }
 
-//Still need to test this
+//Still need to test this and figure out how to add this in the job
+//pipeline
 void execBltInCmd(struct parseInfo* cmd) {
   char* command = cmd->command;
   char** arg = cmd->ArgVarList;

@@ -33,6 +33,7 @@ void add_job(job* newJob){
 		temp->previous = newJob; 
 		newJob->next = temp; 
 		firstJob->next=newJob;
+		printf("add_job: %d\n",newJob->pgid);
 	}
 	size++; 
 }
@@ -46,12 +47,17 @@ int delete_job(pid_t pgid) {
 		return 0; 
 
 
-	//deleting jobs is a bit tricky since there are so many options that might
-	//happen
-
-	job* temp = j->previous; 
-	temp->next = j->next; 
-	j->next->previous = temp; 
+	//case 1: head -> obj -> tail
+	if(j->previous == firstJob){
+		firstJob->next = j->next;
+		j->next->previous = (job*)firstJob;
+	}
+	//case 2: head-> obj1-> obj2 -> tail
+	else{
+		job* temp = j->previous;
+		temp->next = j->next;
+		j->next->previous = temp;
+	}
 
 	free_job(j); 
 	size--; 
@@ -81,7 +87,10 @@ void free_process(process *head){
 
 //do i need to free termios variable?
 void free_job(job* j){
-	free_process(j->firstProcess);
+	if(j->firstProcess != NULL){
+		free_process(j->firstProcess);
+	}
+
 	j->next = NULL; 
 	j->previous = NULL;
 	free(j); 
@@ -109,4 +118,24 @@ int is_job_completed(job *head){
 
 int get_size(void){
 	return size;
+}
+
+//to-be implemented
+
+/**
+* retrieves job from the list based on job scheduling algorithm
+*/
+process* get_job(void){
+	//To-do
+	return NULL;
+}
+
+/*
+ * terminates the job from the running pipe
+ * -still need to hammer the details
+ *
+ * */
+int terminate_job(pid_t id){
+	//To-do
+	return 0;
 }

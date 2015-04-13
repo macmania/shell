@@ -11,13 +11,14 @@
 	commands and job scheduling.
 	
 	The parsing is done as it pertains, the user types the commands and this filters these 
-	commands based on the type of user-input - piping, redirection of files and background. 
-	The commands  are then saved in a text based struct with the purpose to use when showing 
-	user history. 
+	commands based on the type of user-input - piping, redirection of files and background 
+	symbols. The commands  are then saved in a text based struct with the purpose to use 
+	when showing user history. 
 	
-	The management of commands and job scheduling should be combined but putting too much 
-	functionalities in one part will give problems in the future and to improve readability of 
-	the project, I've decided to split this part into 2 ways. 
+	The management of commands and job scheduling should be combined but for the purpose of
+	simplicity, I've decided to split this parts to two ways for the sake of bettering 
+	readability and maintenance. I have intentions of adding components that will enable this 
+	shell to be close in functionalities as other shells.
 	
 	The management of commands holds the appropriate signal handlers for commands executed. 
 	I've followed the signals as it shows in the GNU C library on Job Control Signals. 
@@ -35,13 +36,16 @@
 
 ## Motivation
 	I wanted to have a better grasp on signal handlers, processes and job scheduling. My aim is to 
-	improve my knowledge on kernel development. 
+	improve my knowledge on kernel development and security. 
+
+	In addition, I hope to use this shell as a systems application for small-scale machines such
+	as mobile phones and/or arduinos. 
 	
 ## Installation
 	Run make and type ./shell
 	
 ## Tests
-	Not-yet implemented
+	To-be implemented
 	
 ## Contributors
 	Jouella Fabe

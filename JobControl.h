@@ -50,3 +50,7 @@ int get_size(void);
 void free_process(process*);
 void free_job(job*);
 
+
+//To-do
+process* get_job(void);
+int terminate_job(pid_t);

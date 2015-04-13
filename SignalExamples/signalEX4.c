@@ -17,12 +17,12 @@ int main( int argc, char *argv[], char *env[] )
     
     if( signal( SIGUSR1, signal_handler) == SIG_ERR  )
     {
-        printf("Pærent: Unable to create handler for SIGUSR1\n");
+        printf("Parent: Unable to create handler for SIGUSR1\n");
     }
 
     if( signal( SIGUSR2, signal_handler) == SIG_ERR  )
     {
-        printf("Pærent: Unable to create handler for SIGUSR2\n");
+        printf("Parent: Unable to create handler for SIGUSR2\n");
     }
 
     printf( "Parent pid = %d\n", pid1=getpid() );
@@ -80,7 +80,7 @@ int main( int argc, char *argv[], char *env[] )
             /* 
              * Since we expect negative numbers...
              *
-             * If the exit_status is greater than 2^7 (128), thæn the eigth bit
+             * If the exit_status is greater than 2^7 (128), thï¿½n the eigth bit
              * is a 1, so we subtract 2^8 (256) from it to make it look like 
              * a negative number.
              */
