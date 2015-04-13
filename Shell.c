@@ -59,67 +59,39 @@ int main (int argc, char** argv) {
   sigaction(SIGINT, &saList, NULL);
   sigaction(SIGSTOP, &saList, NULL);
 
+  
+  while(1) {
+  	int childPid;
+  	char* cmdLine;
+  	struct parseInfo* cmd;
+  	commandType* cmdType;
 
-  int isShellInteractive = 1;
+  	cmdLine = readCmdLine(); //tokenizes the commands
+  	//perhaps record the commands typed in a document
+  	if(isCmdEmpty(cmdLine)){
+  	  continue;
+  	}
 
-  //Temporary testing the shell.
-  if(isShellInteractive){
-	  /*this is testing purposes solely to test the validity of
-	   * signal handler for SIGCHLD, SIGCONT, SIGTTIN, SIGTTOU,
-	   * SIGINT, SIGSTOP
-	  */
+  	cmd = parse(cmdLine);
+  	parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
 
-	  /** Wait, for-loop*/
-	  while(1);
-
-
-	  /*Make 5 jobs
-	   * - write out the process ID to the terminal for each of the jobs
-	   * - Ctrl-Z the first job (this job is now in the foreground and should be saved in the list)
-	   * - continue with the next job based on the array
-	   * - when the job terminates by (wait) and/or the job is sent Ctrl-C (for loop)
-	   *   this job should be removed from the job_control list and printed out in the terminal
-	   *	 - when the user types the PID of the stopped job, the OS sends a sigcont signal,
-	   *	   thus, this process needs to be removed from the job_control list
-	   *
-	   * To-do: need to investigate how to test out SIGTTOU, SIGTTIN.
-	   *
-	   **/
-  }
-
-  else{
-	  while(1) {
-		int childPid;
-		char* cmdLine;
-		struct parseInfo* cmd;
-		commandType* cmdType;
-
-		cmdLine = readCmdLine(); //tokenizes the commands
-		//perhaps record the commands typed in a document
-		if(isCmdEmpty(cmdLine)){
-		  continue;
-		}
-
-		cmd = parse(cmdLine);
-		parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
-
-		if (isBltInCmd(cmd)){
-		  execBltInCmd(cmd); //stop, etc.
-		}
-		else {
-			//need to put this somewhere else
-			childPid = fork();
-			if(childPid == 0) {
-			  launchProcess(cmd); //calls execvp
-			} else {
-			  if(isBgJob(cmd)) {
-				//record in a list of background jobs
-			  } else {
-				  waitpid((pid_t)(-1), 0, WNOHANG);
-			  }
-			}
-		}
-	  }
+  	if (isBltInCmd(cmd)){
+  	  execBltInCmd(cmd); //stop, etc.
+  	}
+  	else {
+  		//need to put this somewhere else
+  		childPid = fork();
+  		if(childPid == 0) {
+  		  launchProcess(cmd); //calls execvp
+  		} else {
+  		  if(isBgJob(cmd)) {
+  			//record in a list of background jobs
+  		  } else {
+  			  waitpid((pid_t)(-1), 0, WNOHANG);
+  		  }
+  		}
+  	}
+	  
   }
 }
 

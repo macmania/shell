@@ -2,9 +2,10 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "JobControl.h"
+
 //Implementation of methods in job control
 //Temporary job control
-job **firstJob;//, **lastJob; 
+volatile job **firstJob;
 volatile int size;
 
 
@@ -21,43 +22,28 @@ void add_job(job* newJob){
 	}
 
 	if(firstJob == NULL){
-		firstJob = (struct job**) malloc(sizeof(struct job));
+		firstJob = (volatile struct job**) malloc(sizeof(struct job));
 		newJob->next = NULL; 
 		newJob->previous = NULL;
 		*firstJob = newJob; 
 	}
-	// else{ //here-in lies the error
-		
-	// 	// job *temp = firstJob->next; 
-	// 	// temp->next = firstJob->next->next;
-	// 	// temp->previous = newJob; 
-	// 	// newJob->next = temp; 
-	// 	// firstJob->next=newJob;
-	// 	// newJob->previous = (job*)firstJob;
-	// 	printf("add_job: %d\n",newJob->pgid);
-	// }
 	else {
 		(*firstJob)->previous = newJob;
-		newJob->next = *firstJob;
+		newJob->next = (job*) *firstJob;
 		*firstJob = newJob;
 	}
 	size++; 
 }
 
-//have to look for the actual job
-//To-do, finish this part
 int delete_job(pid_t pgid) {
 	job* j = find_job(pgid);
 
-	if(j == NULL) //pgid does not exist
+	if(j == NULL) 
 		return 0; 
 
-
-	//case 1: head -> obj -> null
 	if(j == *firstJob){
 		*firstJob = j->next; 
 	}
-	//case 2: head-> obj1-> obj2 -> null
 	else if (j->next != NULL){
 		j->next->previous = j->previous;
 	}

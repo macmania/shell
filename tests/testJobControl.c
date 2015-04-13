@@ -28,7 +28,7 @@ int main(void){
 	printf("deleted job j: %s\n", delete_job(14) == 1 ? "true" : "false" );
 
 	printf("size: %d\n", get_size());
-	//free(j);
+	free(j); free(j1);
 
     exit(0);
     
