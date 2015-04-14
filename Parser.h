@@ -15,8 +15,8 @@ error_msg_parse {
 
 enum
 command_type {
-  ENTER_FILE=0, 
-  DEPART_FILE,
+  IN_DIRECT_FILE=0,
+  OUT_DIRECT_FILE,
   BACKGROUND_CMD,
   PIPE
 };
