@@ -7,6 +7,7 @@
 #include "Parser.h"
 
 #define COMPLETED 0
+
 /** Single process **/
 typedef struct process {
 	struct process *next; 
@@ -50,4 +51,4 @@ void set_job_completed(job*);
 //To-do
 process* get_job(void);
 int terminate_job(pid_t);
-void print_command(struct commandType*);
+void print_command(commandType*);

@@ -95,7 +95,7 @@ int is_job_stopped(job *head){
 	process *temp; 
 
 	for(temp = (process*)head; temp; temp = temp->next)
-		if(!temp->completed && !temp->stopped)
+		if(temp->status == SUSPENDED && !temp->stopped)
 			return 0; 
 	return 1; 
 }
@@ -121,25 +121,24 @@ int get_size(void){
 	return size;
 }
 
-void print_command(struct commandType *command){
-	parseInfo* cmd;
+void print_command(commandType *command){
 	int i;
 
-	if(cmd->isInFile)
+	if(command->isInFile)
 		printf("%s <", command->inFile);
 
 	if(command->numPipes == 0 && commandType == NORMAL_CMD){
-		print_info(command->cmdArray[0]);
+		print_info(&(command->CmdArray[0]));
 	}
-	else if(numPipe > 0){
+	else if(command->numPipes > 0){
 		for(i = 0; i < command->numPipes ;i++){
-			print_info(command->cmdArray[i]);
+			print_info(&(command->CmdArray[i]));
 		}
 	}
-	if(cmd->isOutFile){
+	if(command->isOutFile){
 		printf("%s <", command->outFile);
 	}
-	if(commandType == BACKGROUND_CMD){
+	if(command->commandType == BACKGROUND_CMD){
 		printf(" &");
 	}
 }

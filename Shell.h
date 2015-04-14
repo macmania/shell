@@ -30,11 +30,12 @@ void sigHandlers(int, siginfo_t*, void*);
 /* Helper methods **/
 void printPrompt();
 char* readCmdLine();
-bool isBltInCmd();
-void execBltInCmd(struct parseInfo*);
-void launchProcess(struct parseInfo*);
-bool isBgJob(struct parseInfo*); //goes through a linked list to see if the command is paused
-bool isCmdEmpty(char*); 
+int isBltInCmd();
+void execBltInCmd(job*);
+void launchProcess(job*);
+int isBackgroundJob(job*); //goes through a linked list to see if the command is paused
+
+int isCmdEmpty(char*);
 void printErrMsg(enum Error_Messages, char*);
 //#endif
 

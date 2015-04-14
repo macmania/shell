@@ -16,7 +16,7 @@
 #include "Shell.h"
 
 static pid_t shell_pid;
-static pid_t shell_gpid;
+static pid_t shell_pgid;
 static int shell_fd, shell_interactive;
 static int sizeStoppedJobs;
 struct termios shell_tmodes;
@@ -26,7 +26,7 @@ int main (int argc, char** argv) {
   init();
   printPrompt();
   int childPid, pPid;
-  while(true) {
+  while(TRUE) {
 
   	char* cmdLine;
   	struct parseInfo* cmd;
@@ -60,6 +60,7 @@ int main (int argc, char** argv) {
 }
 
 //initialize signal handlers
+//set up the shell as its own process group
 void init(void){
 	pid_t pid;
 
@@ -67,7 +68,7 @@ void init(void){
 	shell_interactive = isatty(shell_fd); //tests whether it's a fd to terminal
 
 	if(shell_interactive){
-	    while (tcgetpgrp (shell_terminal) != (shell_pgid = getpgrp ()))
+	    while (tcgetpgrp (shell_fd) != (shell_pgid = getpgrp ()))
 	        kill (pid, SIGTTIN);
 
 	    //ignore these signals
@@ -82,7 +83,7 @@ void init(void){
 		sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
 		sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
 
-		saChld.sa_sigaction = &signalHandlerList;
+		saChld.sa_sigaction = &saChld;
 		sigemptyset(&saChld.sa_mask);
 		saChld = SA_RESTART;
 
@@ -98,8 +99,8 @@ void init(void){
 			exit(EXIT_FAILURE);
 		}
 
-		tcsetgrp(shell_terminal, shell_pgid);
-		tcgetattr(shell_terminal, &shell_tmodes);
+		tcsetgrp(shell_fd, shell_pgid);
+		tcgetattr(shell_fd, &shell_tmodes);
 	}
 	else{
 		printf("Error in initializing shell. Exiting...\n");
@@ -116,7 +117,7 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 	pid = waitpid(WAIT_ANY, &status, WUNTRACED | WNOHANG);
 
 	if(pid > 0){ //handle the
-		job *j = getJob(pid, BY_PROCESS_PID);
+		job *j = getJob(pid, BY_PROCESS_ID);
 		if(j == NULL){
 			printf("Job is null inside sig child handler"); //temporary debug print info
 			return;
@@ -316,11 +317,11 @@ int isBltInCmd(struct parseInfo* cmd){
   return FALSE;
 }
 
-bool isCmdEmpty(char* cmd){
+int isCmdEmpty(char* cmd){
   if(cmd == NULL || cmd[0] == '\0' || cmd[0] == '\n'){
-    return true; 
+    return TRUE;
   }
-  return false; 
+  return FALSE;
 }
 
 //prints error message based on the error message built in 
