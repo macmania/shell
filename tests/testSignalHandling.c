@@ -60,10 +60,18 @@ int main(void){
   	init_commands(); 
 
 	while(1){
-		child = fork(); 
-		if(child == 0){
+		 
+		if((child = fork()) == 0){
 			cmd[pointer_cmd]->pid = child;
 			launch_job();
+		}
+		else if(child == -1){
+			printf("Error");
+			exit(EXIT_FAILURE);
+		}
+		else{
+			printf("\nHere"); 
+			wait(&child);
 		}
 
 		if(jobs_completed == 4) //all jobs were completed
@@ -101,10 +109,11 @@ void signalHandler(int signal_number, siginfo_t* si, void* context){
 		case SIGCHLD:
 			printf("Finishing job");
 			int pid;
-			pid = waitpid(WAIT_ANY, &status, WUNTRACED);
 			jobs_completed++; 
 			cmd[pointer_cmd]->complete = 1; //delete them from list
 			cmd[pointer_cmd]->bg = 0; 
+			findJob(); 
+			pid = waitpid(WAIT_ANY, &status, WUNTRACED);
 			break;
 		case SIGSTOP: 
 			printf("Stopping command"); printCommand(); 
@@ -117,6 +126,7 @@ void signalHandler(int signal_number, siginfo_t* si, void* context){
 			break;
 		case SIGINT: 
 			printf("Terminating command"); printCommand(); 
+			jobs_completed++; 
 			cmd[pointer_cmd]->complete = 1; //not done but completed 
 			cmd[pointer_cmd]->bg = 0; 
 			break;
