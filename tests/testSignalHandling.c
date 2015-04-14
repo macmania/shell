@@ -62,7 +62,13 @@ int main(void){
 	while(1){
 		 
 		if((child = fork()) == 0){
-			cmd[pointer_cmd]->pid = child;
+			sigaction(SIGCHLD, &sa, NULL); //a child process being done
+  			sigaction(SIGCONT, &sa, NULL); //a process that is sent to be continued
+  			sigaction(SIGTTIN, &sa, NULL); //terminal access signal
+  			sigaction(SIGTTOU, &sa, NULL);
+  			sigaction(SIGINT, &sa, NULL);
+  			sigaction(SIGTSTP, &sa, NULL);
+			
 			launch_job();
 		}
 		else if(child == -1){
@@ -70,10 +76,20 @@ int main(void){
 			exit(EXIT_FAILURE);
 		}
 		else{
-			printf("\nHere\n"); 
+			cmd[pointer_cmd]->pid = child;
+			printCommand(); sleep(1); 
+			//printf("\nPID: %d\n",cmd[pointer_cmd]->pid); 
+
+			if(jobs_completed == 3){
+				findJob(); 
+				kill(cmd[pointer_cmd]->pid,SIGCONT);
+			}
 
 			wait(&child);
-			if(jobs_completed == 4) exit(EXIT_SUCCESS);
+			if(jobs_completed == 4){
+			 	printf("\n\n******Exiting*****\n\n");
+			 	exit(EXIT_SUCCESS);
+			}
 		}
 
 		if(jobs_completed == 4) //all jobs were completed
