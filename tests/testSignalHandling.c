@@ -55,7 +55,7 @@ int main(void){
   	sigaction(SIGTTIN, &sa, NULL); //terminal access signal
   	sigaction(SIGTTOU, &sa, NULL);
   	sigaction(SIGINT, &sa, NULL);
-  	sigaction(SIGSTOP, &sa, NULL);
+  	sigaction(SIGTSTP, &sa, NULL);
   	
   	init_commands(); 
 
@@ -70,8 +70,10 @@ int main(void){
 			exit(EXIT_FAILURE);
 		}
 		else{
-			printf("\nHere"); 
+			printf("\nHere\n"); 
+
 			wait(&child);
+			if(jobs_completed == 4) exit(EXIT_SUCCESS);
 		}
 
 		if(jobs_completed == 4) //all jobs were completed
@@ -93,7 +95,7 @@ void init_commands(void){
 
 	cmd[0]->args[0] = "ls"; cmd[0]->args[1] = NULL; 
 	cmd[1]->args[0] = "whois"; cmd[1]->args[1] = "jojofabe"; cmd[1]->args[2] = NULL; 
-	cmd[2]->args[0] = "man"; cmd[2]->args[1] = NULL; 
+	cmd[2]->args[0] = "sleep"; cmd[2]->args[1] = "5"; cmd[2]->args[2] = NULL;
 	cmd[3]->args[0] = "echo"; cmd[3]->args[1] = "$PATH"; cmd[3]->args[2] = NULL; 
 }
 
@@ -107,7 +109,7 @@ void launch_job(void){
 void signalHandler(int signal_number, siginfo_t* si, void* context){
 	switch(signal_number){
 		case SIGCHLD:
-			printf("Finishing job");
+			printf("Finishing job\n");
 			int pid;
 			jobs_completed++; 
 			cmd[pointer_cmd]->complete = 1; //delete them from list
@@ -115,20 +117,21 @@ void signalHandler(int signal_number, siginfo_t* si, void* context){
 			findJob(); 
 			pid = waitpid(WAIT_ANY, &status, WUNTRACED);
 			break;
-		case SIGSTOP: 
-			printf("Stopping command"); printCommand(); 
+		case SIGTSTP: 
+			printf("Stopping command\n"); printCommand(); 
 			cmd[pointer_cmd]->bg = 1; 
 			break;
 		case SIGCONT: 
-			printf("Continuing command");
+			printf("Continuing command\n");
 			cmd[pointer_cmd]->bg = 0;
 			launch_job();  /** Need to start the job? **/
 			break;
 		case SIGINT: 
-			printf("Terminating command"); printCommand(); 
+			printf("Terminating command\n"); printCommand(); 
 			jobs_completed++; 
 			cmd[pointer_cmd]->complete = 1; //not done but completed 
 			cmd[pointer_cmd]->bg = 0; 
+			findJob(); 
 			break;
 		case SIGTTIN: 
 			break;
@@ -143,7 +146,6 @@ void signalHandler(int signal_number, siginfo_t* si, void* context){
 //more complicated maneuver
 void findJob(void){
 	int rounds = 0;
-
 	for(; pointer_cmd < 4 && 
 		  cmd[pointer_cmd]->complete != 0 && 
 		  cmd[pointer_cmd]->bg != 1 && rounds != 2; pointer_cmd++){
