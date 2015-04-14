@@ -23,7 +23,8 @@ command_type {
   IN_DIRECT_FILE=0,
   OUT_DIRECT_FILE,
   BACKGROUND_CMD,
-  PIPE
+  PIPE,
+  NORMAL_CMD
 };
 
 struct parseInfo{

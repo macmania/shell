@@ -50,3 +50,4 @@ void set_job_completed(job*);
 //To-do
 process* get_job(void);
 int terminate_job(pid_t);
+void print_command(struct commandType*);

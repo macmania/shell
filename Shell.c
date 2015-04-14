@@ -19,6 +19,7 @@ static pid_t shell_pid;
 static pid_t shell_gpid;
 static int shell_fd, shell_interactive;
 static int sizeStoppedJobs;
+struct termios shell_tmodes;
 
 int main (int argc, char** argv) {
 
@@ -55,7 +56,6 @@ int main (int argc, char** argv) {
   			  printf("signal interrupt delivered to calling process");
   		}
   	}
-	  
   }
 }
 
@@ -63,39 +63,48 @@ int main (int argc, char** argv) {
 void init(void){
 	pid_t pid;
 
-	pid = getpid();
-	/*Set termios and such, just set setgpid**/
+	shell_fd = STDIN_FILENO; //file descriptor for terminal
+	shell_interactive = isatty(shell_fd); //tests whether it's a fd to terminal
 
-	struct sigaction sa;
-	struct sigaction saChld;
+	if(shell_interactive){
+	    while (tcgetpgrp (shell_terminal) != (shell_pgid = getpgrp ()))
+	        kill (pid, SIGTTIN);
 
-	sa.sa_sigaction = sigHandlers;
-	sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
-	sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
+	    //ignore these signals
+	    signal(SIGTSTP, SIG_IGN);
+	    signal(SIGTTIN, SIG_IGN);
+	    signal(SIGTTOU, SIG_IGN);
 
-	//this deals with signals associated with
-	sigaction(SIGCHLD, &sa, NULL); //a child process being done
-	sigaction(SIGCONT, &sa, NULL); //a process that is sent to be continued
-	//sigaction(SIGTTIN, &sa, NULL); //terminal access signal
-	//sigaction(SIGTTOU, &sa, NULL); //terminal access signal
+		struct sigaction sa;
+		struct sigaction saChld;
 
-	//The list needs to be added and removed, make sure no signals
-	//are blocked
-	saList.sa_sigaction = &signalHandlerList;
-	sigemptyset(&sa.sa_mask);
+		sa.sa_sigaction = sigHandlers;
+		sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
+		sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
 
-	/*Block all other terminal-generated signals**/
-	sigaddset(&sa.sa_mask, ); //child has exited or terminated
-	sigaddset(&sa.sa_mask, SIGCONT); //tells the process to continue processing
-	sigaddset(&sa.sa_mask, SIGTTIN); //bg process attempts to read from terminal, this is sent to that process
-	sigaddset(&sa.sa_mask, SIGTTOU); /**bg process attempts to write from terminal or set its terminal modes
-									, this is sent to that process **/
-	sigaction(SIGSTOP, &saChld, NULL);
-	saChld.sa_flags = SA_RESTART;
-	sigaction(SIGCHLD, &saChld, NULL);
+		saChld.sa_sigaction = &signalHandlerList;
+		sigemptyset(&saChld.sa_mask);
+		saChld = SA_RESTART;
 
+		//this deals with signals associated with
+		sigaction(SIGSTOP, &sa, NULL);
+		sigaction(SIGINT, &sa, NULL);
+		sigaction(SIGCONT, &sa, NULL);
+		sigaction(SIGCHLD, &saChld, NULL);
 
+		shell_pgid = getpid();
+		if(setpgid(shell_pgid, shell_pgid) < 0){
+			perror("Couldn't put shell in its own group");
+			exit(EXIT_FAILURE);
+		}
 
+		tcsetgrp(shell_terminal, shell_pgid);
+		tcgetattr(shell_terminal, &shell_tmodes);
+	}
+	else{
+		printf("Error in initializing shell. Exiting...\n");
+		exit(EXIT_FAILURE);
+	}
 }
 
 
@@ -113,9 +122,9 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 			return;
 		}
 		else if(WIFEXITED(status)){ //
-
 			set_job_completed(j);
-			print_info(j->command)
+			print_info(j->command);
+			delete_job(j); //To-do change delete_job method in JobControl.c
 		}
 		else if(WIFSIGNALED(status)){ //
 
@@ -160,19 +169,6 @@ void sigHandlers(int sig, siginfo_t *si, void *context) {
   }
 }
 
-/*
- * Still need to further expand this part
- * **/
-void signalHandlerList(int s, siginfo_t *si, void *context) {
-  switch(s){
-
-    case SIGSTOP: //Running -> Background/Foreground
-    		//put in foreground
-    		/* To-do, find the job from the list in job_control **/
-    	  printf("Hello");
-      break;
-  }
-}
 
 void printPrompt(){
   printf("Welcome to Jojo's small scale shell\n");

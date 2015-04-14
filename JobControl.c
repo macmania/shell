@@ -117,7 +117,29 @@ void set_job_completed(job *j){
 }
 
 
-
 int get_size(void){
 	return size;
+}
+
+void print_command(struct commandType *command){
+	parseInfo* cmd;
+	int i;
+
+	if(cmd->isInFile)
+		printf("%s <", command->inFile);
+
+	if(command->numPipes == 0 && commandType == NORMAL_CMD){
+		print_info(command->cmdArray[0]);
+	}
+	else if(numPipe > 0){
+		for(i = 0; i < command->numPipes ;i++){
+			print_info(command->cmdArray[i]);
+		}
+	}
+	if(cmd->isOutFile){
+		printf("%s <", command->outFile);
+	}
+	if(commandType == BACKGROUND_CMD){
+		printf(" &");
+	}
 }
