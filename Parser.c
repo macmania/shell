@@ -94,7 +94,7 @@ void parse_command(char *command, commandType *comm){
         break;
 
       case '&':
-        comm->isBackground = 1;
+        comm->status = BACKGROUND;
         break;
     }
 
@@ -104,7 +104,7 @@ void parse_command(char *command, commandType *comm){
 
   cpyPtr = trimWhiteSpaces(cpyPtr); //time-consuming 
   if(cpyPtr[strlen(cpyPtr)-1] == '&'){
-    comm->isBackground = 1;
+    comm->isBackground = FOREGROUND;
   }
 
 }

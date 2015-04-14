@@ -5,7 +5,7 @@
 
 //Implementation of methods in job control
 //Temporary job control
-volatile job **firstJob;
+volatile job **firstJob; //list to hold the stopped jobs
 volatile int size;
 
 
@@ -103,10 +103,20 @@ int is_job_stopped(job *head){
 int is_job_completed(job *head){
 	process *p; 
 	for(p = (process*)head->firstProcess; p; p = p->next)
-		if(!p->completed)
+		if(p->status == BACKGROUND)
 			return 0; 
 	return 1; 
 }
+
+void set_job_completed(job *j){
+	process *p;
+	printf("");
+	for(p = (process*)j->firstProcess; p; p = p->next){
+		p->status = COMPLETED;
+	}
+}
+
+
 
 int get_size(void){
 	return size;

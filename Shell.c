@@ -9,59 +9,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include "JobControl.h"
-#include "Shell.h" //to-do need to put this in a directory
+#include "Shell.h"
 
-//Global variables that keep track of parent group id and child id
-//pid_t parentId, childID, status; 
-	/**potential race condition here, might need to look this further**/
-            //data-race condition
-
-void signalHandler(int, siginfo_t*, void*);
-void signalHandlerList(int, siginfo_t*, void*);
-
+static pid_t shell_pid;
+static pid_t shell_gpid;
+static int shell_fd, shell_interactive;
+static int sizeStoppedJobs;
 
 int main (int argc, char** argv) {
-  struct sigaction sa; 
-  struct sigaction saList; //this sigaction deals with sigint and sigstp
-                        //ensures that data is not touched
+
+  init();
   printPrompt();
-  //add a list that adds commands to the list
+  int childPid, pPid;
+  while(true) {
 
-  //These are the signals that need to be handled appropriately
-  //by the job scheduler
-  sa.sa_sigaction = signalHandler;
-  sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
-  sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
-
-  //this deals with signals associated with 
-  sigaction(SIGCHLD, &sa, NULL); //a child process being done
-  sigaction(SIGCONT, &sa, NULL); //a process that is sent to be continued
-  sigaction(SIGTTIN, &sa, NULL); //terminal access signal
-  sigaction(SIGTTOU, &sa, NULL); //terminal access signal
-
-  //The list needs to be added and removed, make sure no signals
-  //are blocked
-  saList.sa_sigaction = &signalHandlerList;
-  sigemptyset(&sa.sa_mask);
-
-  /*Block all other terminal-generated signals**/
-  sigaddset(&sa.sa_mask, SIGCHLD); //child has exited or terminated
-  sigaddset(&sa.sa_mask, SIGCONT); //tells the process to continue processing
-  sigaddset(&sa.sa_mask, SIGTTIN); //bg process attempts to read from terminal, this is sent to that process
-  sigaddset(&sa.sa_mask, SIGTTOU); /**bg process attempts to write from terminal or set its terminal modes
-  	  	  	  	  	  	  	  	    , this is sent to that process **/
-
-  saList.sa_flags = SA_RESTART;
-  sigaction(SIGINT, &saList, NULL);
-  sigaction(SIGSTOP, &saList, NULL);
-
-  
-  while(1) {
-  	int childPid;
   	char* cmdLine;
   	struct parseInfo* cmd;
   	commandType* cmdType;
@@ -79,28 +44,94 @@ int main (int argc, char** argv) {
   	  execBltInCmd(cmd); //stop, etc.
   	}
   	else {
-  		//need to put this somewhere else
   		childPid = fork();
   		if(childPid == 0) {
+  		  //To-do
   		  launchProcess(cmd); //calls execvp
   		} else {
-  		  if(isBgJob(cmd)) {
-  			//record in a list of background jobs
-  		  } else {
-  			  waitpid((pid_t)(-1), 0, WNOHANG);
-  		  }
+  		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
+
+  		  if(EINTR == pPid)
+  			  printf("signal interrupt delivered to calling process");
   		}
   	}
 	  
   }
 }
 
-//provides more context to the group id and such
-/**
- * Needs more work
- * */
-void signalHandler(int s, siginfo_t *si, void *context) {
-  switch(s){ //handles all of the signals
+//initialize signal handlers
+void init(void){
+	pid_t pid;
+
+	pid = getpid();
+	/*Set termios and such, just set setgpid**/
+
+	struct sigaction sa;
+	struct sigaction saChld;
+
+	sa.sa_sigaction = sigHandlers;
+	sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
+	sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
+
+	//this deals with signals associated with
+	sigaction(SIGCHLD, &sa, NULL); //a child process being done
+	sigaction(SIGCONT, &sa, NULL); //a process that is sent to be continued
+	//sigaction(SIGTTIN, &sa, NULL); //terminal access signal
+	//sigaction(SIGTTOU, &sa, NULL); //terminal access signal
+
+	//The list needs to be added and removed, make sure no signals
+	//are blocked
+	saList.sa_sigaction = &signalHandlerList;
+	sigemptyset(&sa.sa_mask);
+
+	/*Block all other terminal-generated signals**/
+	sigaddset(&sa.sa_mask, ); //child has exited or terminated
+	sigaddset(&sa.sa_mask, SIGCONT); //tells the process to continue processing
+	sigaddset(&sa.sa_mask, SIGTTIN); //bg process attempts to read from terminal, this is sent to that process
+	sigaddset(&sa.sa_mask, SIGTTOU); /**bg process attempts to write from terminal or set its terminal modes
+									, this is sent to that process **/
+	sigaction(SIGSTOP, &saChld, NULL);
+	saChld.sa_flags = SA_RESTART;
+	sigaction(SIGCHLD, &saChld, NULL);
+
+
+
+}
+
+
+/*Signal Handlers**/
+void sigChldHandler(int sig, siginfo_t *si, void *context){
+	pid_t pid;
+	int status;
+
+	pid = waitpid(WAIT_ANY, &status, WUNTRACED | WNOHANG);
+
+	if(pid > 0){ //handle the
+		job *j = getJob(pid, BY_PROCESS_PID);
+		if(j == NULL){
+			printf("Job is null inside sig child handler"); //temporary debug print info
+			return;
+		}
+		else if(WIFEXITED(status)){ //
+
+			set_job_completed(j);
+			print_info(j->command)
+		}
+		else if(WIFSIGNALED(status)){ //
+
+		}
+		else if(WIFSTOPPED(status)){ //child process has been sent stopped signal
+
+		}
+		else if(WIFCONTINUED(status)){
+
+		}
+	}
+}
+
+
+void sigHandlers(int sig, siginfo_t *si, void *context) {
+  switch(sig){ //handles all of the signals
     case SIGCHLD: //Running -> Terminated (history)
     		while (waitpid((pid_t)(-1), 0, WNOHANG) > 0); //reaps the child process
     		//wait until the child process is done and delete it from the list
@@ -119,7 +150,13 @@ void signalHandler(int s, siginfo_t *si, void *context) {
       /* To-do, process attempts to write to the terminal or change the termios, default action
        * is to terminate the process
        */
-      break;
+    	 break;
+    case SIGINT: //Running -> Terminate
+       		//kill this job and remove from the list
+       		/* To-do, removes the job from the list in job_control
+       		 * Temporary: add the job in an array of jobs or so that changes **/
+     break;
+
   }
 }
 
@@ -128,13 +165,7 @@ void signalHandler(int s, siginfo_t *si, void *context) {
  * **/
 void signalHandlerList(int s, siginfo_t *si, void *context) {
   switch(s){
-    case SIGINT: //Running -> Terminate
-    		//kill this job and remove from the list
-    		/* To-do, removes the job from the list in job_control
-    		 * Temporary: add the job in an array of jobs or so that changes
-    		 * dynamically, this signals whether */
-    	printf("Hi");
-    	break;
+
     case SIGSTOP: //Running -> Background/Foreground
     		//put in foreground
     		/* To-do, find the job from the list in job_control **/
@@ -278,28 +309,15 @@ void execBltInCmd(struct parseInfo* cmd) {
     printErrMsg(LESS_NUM_ARGS, command); 
 }
 
-
-//call execvp here 
-//(Running)
-void launchProcess(struct parseInfo* cmd) {
-  
-}
-
-/*** Need to change this portion here, argument is not consistent**/
-bool isBgJob(struct parseInfo* cmd) {
-  return false; 
-}
-
-
 //temporary, only built in command is exit for now
-bool isBltInCmd(struct parseInfo* cmd){
+int isBltInCmd(struct parseInfo* cmd){
   char* command = cmd->command;
   if(strcmp(command, "exit") == 0 || strcmp(command, "jobs") == 0 ||
        strcmp(command, "cd") == 0 || strcmp(command, "kill") == 0 || 
           strcmp(command, "history") == 0){
-    return true;
+    return TRUE;
   }
-  return false; 
+  return FALSE;
 }
 
 bool isCmdEmpty(char* cmd){

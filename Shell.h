@@ -1,22 +1,29 @@
 //#ifndef Shell_h
 //#define Shell_h
-#include "Parser.h"
+#include "JobControl.h"
 
-typedef int bool;
-#define true 1
-#define false 0
+#define TRUE 1
+#define FALSE 0
 
+
+
+#define BY_PROCESS_ID 0
+#define BY_JOB_STATUS 1
+#define
 
 enum 
 BUILT_IN_COMMAND { NOT_BLT_CMD=0, JOBS, CD, HISTORY, EXIT, KILL };
+
 
 enum 
 Error_Messages {LESS_NUM_ARGS=0, MORE_NUM_ARGS, NEED_NUMERIC_ARG, FILE_NAME_INCOR};
 
 
-	//Foreground is ready
+void init(void); //initialize signal handlers
 
 /** Signal handlers **/
+void sigChldHandler(int, siginfo_t*, void*);
+void sigHandlers(int, siginfo_t*, void*);
 
 /** End signal handlers **/
 
@@ -27,7 +34,6 @@ bool isBltInCmd();
 void execBltInCmd(struct parseInfo*);
 void launchProcess(struct parseInfo*);
 bool isBgJob(struct parseInfo*); //goes through a linked list to see if the command is paused
-void waitPid(int);
 bool isCmdEmpty(char*); 
 void printErrMsg(enum Error_Messages, char*);
 //#endif

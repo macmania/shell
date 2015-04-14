@@ -8,7 +8,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
-#include "/Users/jojofabe/workspace/spring/OS/shell/JobControl.h"
+#include "/Users/jojofabe/Workspace/c/shell/JobControl.h"
 
 int main(void){
 

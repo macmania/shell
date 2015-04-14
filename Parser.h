@@ -6,6 +6,11 @@
 #define PIPE_MAX_NUM 10
 #define FILE_MAX_NUM 40
 
+#define BACKGROUND 0
+#define FOREGROUND 1
+#define SUSPENDED 2
+#define WAIT_INPUT 3
+
 enum
 error_msg_parse {
   FILE_NAME_NOT_FOUND=0,
@@ -32,7 +37,7 @@ struct parseInfo{
 typedef struct {
   int isInFile; //bool val to check if a file is passed to be read
   int isOutFile;  //bool val to check if a file is passed to be saved in a file
-  int isBackground; //checks to see if the process is going to be background
+  int status; //checks to see if the process is going to be background
   int commandType; //checks to see what type of command
   int numPipes; //number of pipes, <still need to finalize>
   struct parseInfo CmdArray[PIPE_MAX_NUM];
