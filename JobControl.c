@@ -108,14 +108,28 @@ int is_job_completed(job *head){
 	return 1; 
 }
 
-void set_job_completed(job *j){
+void set_job_status(job *j, int status){
+	if(j == NULL){
+		printf("ERROR... SET_JOB_STATUS"); //temporary debug flag
+		return;
+	}
 	process *p;
-	printf("");
 	for(p = (process*)j->firstProcess; p; p = p->next){
-		p->status = COMPLETED;
+		p->status = status;
 	}
 }
 
+void set_job_completed(job* j){
+	set_job_status(j, COMPLETED);
+}
+
+void set_job_suspended(job* j){
+	set_job_status(j, SUSPENDED);
+}
+
+void set_job_continued(job* j){
+	set_job_status(j, FOREGROUND);
+}
 
 int get_size(void){
 	return size;

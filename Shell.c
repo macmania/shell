@@ -124,30 +124,29 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 		}
 		else if(WIFEXITED(status)){ //
 			set_job_completed(j);
+			printf("Job done");
 			print_info(j->command);
+			printf("\n");
 			delete_job(j); //To-do change delete_job method in JobControl.c
 		}
 		else if(WIFSIGNALED(status)){ //
-
+			printf("The job below was not handled properly\n");
+			print_info(j->command);
+			delete_job(j); //temporary fix
 		}
 		else if(WIFSTOPPED(status)){ //child process has been sent stopped signal
-
+			set_job_background(j);
 		}
 		else if(WIFCONTINUED(status)){
-
+			set_job_continued(j);
 		}
 	}
 }
 
 
 void sigHandlers(int sig, siginfo_t *si, void *context) {
-  switch(sig){ //handles all of the signals
-    case SIGCHLD: //Running -> Terminated (history)
-    		while (waitpid((pid_t)(-1), 0, WNOHANG) > 0); //reaps the child process
-    		//wait until the child process is done and delete it from the list
-    		/*Temporary: finds the pid of this job and removes the job from the list
-    		 * and/or change the field*/
-      break;
+  switch(sig){
+
     case SIGCONT:  //Ready -> Running
     	   //finds the process and send some sort of signal
     		/*To-do send the signal to the job and add it to the list */
@@ -166,13 +165,12 @@ void sigHandlers(int sig, siginfo_t *si, void *context) {
        		/* To-do, removes the job from the list in job_control
        		 * Temporary: add the job in an array of jobs or so that changes **/
      break;
-
   }
 }
 
 
 void printPrompt(){
-  printf("Welcome to Jojo's small scale shell\n");
+  printf("*** Welcome to Jojo's small scale shell\n\n ****");
 }
 
 /* Reads line in command line */
