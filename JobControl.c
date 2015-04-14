@@ -111,23 +111,3 @@ int is_job_completed(job *head){
 int get_size(void){
 	return size;
 }
-
-//to-be implemented
-
-/**
-* retrieves job from the list based on job scheduling algorithm
-*/
-process* get_job(void){
-	//To-do
-	return NULL;
-}
-
-/*
- * terminates the job from the running pipe
- * -still need to hammer the details
- *
- * */
-int terminate_job(pid_t id){
-	//To-do
-	return 0;
-}

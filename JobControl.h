@@ -4,14 +4,7 @@
 	This is the basis for job control
 **/
 #include <termios.h>
-
-enum
-Process_State {
-	FOREGROUND=0, 
-	BACKGROUND, 
-	RUNNING, 
-	TERMINATED
-};
+#include "Parser.h"
 
 /** Single process **/
 typedef struct process {
@@ -19,7 +12,7 @@ typedef struct process {
 	pid_t pid; 
 	char completed; 
 	char stopped; 
-	int status; 
+	int status;
 }process; 
 
 /* pipeline of processes */
@@ -37,6 +30,9 @@ typedef struct job {
 	char notified; 
 	struct termios tmodes; 
 	int stdin, stdout, stderr; //why do i need this??
+
+	//printing commands
+	commandType *command;
 }job; 
 
 job* find_job(pid_t); 
