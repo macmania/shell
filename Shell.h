@@ -9,7 +9,7 @@
 
 #define BY_PROCESS_ID 0
 #define BY_JOB_STATUS 1
-#define
+#define BY_JOB_ID 3 //the id number of the job list
 
 enum 
 BUILT_IN_COMMAND { NOT_BLT_CMD=0, JOBS, CD, HISTORY, EXIT, KILL };

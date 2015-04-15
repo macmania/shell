@@ -6,7 +6,6 @@
 #include <termios.h>
 #include "Parser.h"
 
-#define COMPLETED 0
 
 /** Single process **/
 typedef struct process {

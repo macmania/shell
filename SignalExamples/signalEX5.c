@@ -11,27 +11,29 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int i, pid1, pid2, status;
+int i, parent, child, status;
 
 static void signal_handler(int signo)
 {
+
     /* signo contains the signal number that was received */
     switch( signo )
     {
         /* Signal is a SIGINT */
         case SIGINT:
+        		sleep(1);
             printf( "Process %d: received SIGINT (Ctrl-C)\n", getpid() );
             fflush(stdout);
-            printf( "Process %d: passing SIGINT to %d...\n", getpid(),pid2 );
-            kill( pid2, SIGINT );
+            printf( "Process %d: passing SIGINT to %d...\n", getpid(),child );
+            kill( getpid(), SIGKILL );
             break;
         
         /*  It's a SIGQUIT */
         case SIGQUIT:
             printf( "Process %d: received SIGQUIT (Ctrl-\\)\n", getpid() );
             fflush(stdout);
-            printf( "Process %d: passing SIGQUIT to %d...\n", getpid(),pid2 );
-            kill( pid2, SIGQUIT );
+            printf( "Process %d: passing SIGQUIT to %d...\n", getpid(),child );
+            kill( child, SIGQUIT );
             break;
 
         default:
@@ -43,26 +45,27 @@ static void signal_handler(int signo)
 
 int main( int argc, char *argv[], char *env[] )
 {
-    if( signal( SIGINT, signal_handler) == SIG_ERR  )
+    if( signal( SIGINT, SIG_IGN) == SIG_ERR  )
     {
         printf("Parent: Unable to create handler for SIGINT\n");
     }
 
-    if( signal( SIGQUIT, signal_handler) == SIG_ERR  )
+    if( signal( SIGQUIT, SIG_IGN) == SIG_ERR  )
     {
         printf("Parent: Unable to create handler for SIGQUIT\n");
     }
 
-    pid1 = getpid();
-    printf( "Parent pid = %d\n", pid1 );
+    parent = getpid();
+    printf( "Parent pid = %d\n", parent );
 
-    if( (pid2 = fork()) == 0 )
+    if( (child = fork()) == 0 )
     {
         /* Ignore the signals that are supposed to be received by the parent*/
         signal( SIGQUIT, SIG_IGN );
 
         /* Restore the default handler on SIGINT in the child */
-        signal( SIGINT, SIG_DFL );
+        signal( SIGINT, signal_handler );
+
 
         printf( "Child pid = %d\n", getpid() );
         for( ;; )
@@ -77,7 +80,8 @@ int main( int argc, char *argv[], char *env[] )
          * dies normally or from a signal.  The satus information is then
          * stored in the status integer.
          */
-        wait( &status );
+        int pid = wait(&status);
+        printf("%d ID", pid);
         
         /*
          * The information in status is *NOT* the return code!!  To make use

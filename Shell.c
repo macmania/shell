@@ -129,42 +129,44 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 			printf("\n");
 			delete_job(j); //To-do change delete_job method in JobControl.c
 		}
-		else if(WIFSIGNALED(status)){ //
+		else if(WIFSIGNALED(status)){ //delete job
 			printf("The job below was not handled properly\n");
 			print_info(j->command);
 			delete_job(j); //temporary fix
 		}
 		else if(WIFSTOPPED(status)){ //child process has been sent stopped signal
 			set_job_background(j);
+			sizeStoppedJobs++;
 		}
 		else if(WIFCONTINUED(status)){
 			set_job_continued(j);
+			kill(j->pgid, SIGCONT); //iffy
 		}
 	}
 }
 
 
 void sigHandlers(int sig, siginfo_t *si, void *context) {
-  switch(sig){
+	int pid = getpid(); //the pid of the child
+	job* j = getJob(pid, BY_PROCESS_ID);
 
-    case SIGCONT:  //Ready -> Running
-    	   //finds the process and send some sort of signal
-    		/*To-do send the signal to the job and add it to the list */
-      break; 
-    case SIGTTIN: 
-    		/*To-do, process attempts to read from the terminal, the default action is
-    		 * to terminate the process**/
-      break; 
-    case SIGTTOU:
-      /* To-do, process attempts to write to the terminal or change the termios, default action
-       * is to terminate the process
-       */
-    	 break;
-    case SIGINT: //Running -> Terminate
-       		//kill this job and remove from the list
-       		/* To-do, removes the job from the list in job_control
-       		 * Temporary: add the job in an array of jobs or so that changes **/
-     break;
+	switch(sig){
+		case SIGCONT:  //Ready -> Running
+		  set_job_continued(j);
+
+		  break;
+		case SIGTTIN:
+				/*To-do, process attempts to read from the terminal, the default action is
+				 * to terminate the process**/
+		  break;
+		case SIGTTOU:
+		  /* To-do, process attempts to write to the terminal or change the termios, default action
+		   * is to terminate the process
+		   */
+			 break;
+		case SIGINT:
+
+		 break;
   }
 }
 

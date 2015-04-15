@@ -10,7 +10,7 @@
 #define FOREGROUND 1
 #define SUSPENDED 2
 #define WAIT_INPUT 3
-
+#define COMPLETED 4
 enum
 error_msg_parse {
   FILE_NAME_NOT_FOUND=0,
