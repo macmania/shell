@@ -5,18 +5,18 @@
 
 //Implementation of methods in job control
 //Temporary job control
-volatile job **firstJob; //list to hold the stopped jobs
+ //list to hold the stopped jobs
 volatile int size;
 
 
-void init_process(process* p) {
+void initProcess(process* p) {
 	p = malloc(sizeof(p)); 
 }
 
 //adds the first job 
 //need to call parse_job first before adding the job. 
 //makes this confusing if not handled appropriately
-void add_job(job* newJob){
+void addJob(job* newJob){
 	if(newJob == NULL){
 		return; 
 	}
@@ -35,7 +35,7 @@ void add_job(job* newJob){
 	size++; 
 }
 
-int delete_job(pid_t pgid) {
+int deleteJob(pid_t pgid) {
 	job* j = find_job(pgid);
 
 	if(j == NULL) 
@@ -56,7 +56,7 @@ int delete_job(pid_t pgid) {
 	return 1;
 }
 
-job* find_job(pid_t pgid){
+job* findJob(pid_t pgid){
 	job *head;
 
 	for(head = (job*) ((*firstJob)->next); head; head = head->next) {
@@ -68,7 +68,7 @@ job* find_job(pid_t pgid){
 }
 
 //deletes all of the processes in the pipe-line
-void free_process(process *head){
+void freeProcess(process *head){
 	struct process *tmp;
 	while(head != NULL){
 		tmp = head; 
@@ -78,20 +78,22 @@ void free_process(process *head){
 }
 
 //do i need to free termios variable?
-void free_job(job* j){
+void freeJob(job* j){
 	if(j->first_process != NULL){
 		free_process(j->first_process);
 	}
 
 	j->next = NULL; 
 	j->previous = NULL;
+	freeInfo(j->cmdInfo);
+	free(j->command);
 	free(j); 
 }
 
 
 
 /** utility functions that will be used to operate on job objects **/
-int is_job_stopped(job *head){
+int isJobStopped(job *head){
 	process *temp; 
 
 	for(temp = (process*)head; temp; temp = temp->next)
@@ -100,7 +102,7 @@ int is_job_stopped(job *head){
 	return 1; 
 }
 
-int is_job_completed(job *head){
+int isJobCompleted(job *head){
 	process *p; 
 	for(p = (process*)head->first_process; p; p = p->next)
 		if(p->status == BACKGROUND)
@@ -108,7 +110,7 @@ int is_job_completed(job *head){
 	return 1; 
 }
 
-void set_job_status(job *j, int status){
+void setJobStatus(job *j, int status){
 	if(j == NULL){
 		printf("ERROR... SET_JOB_STATUS"); //temporary debug flag
 		return;
@@ -119,29 +121,30 @@ void set_job_status(job *j, int status){
 	}
 }
 
-void set_job_completed(job* j){
+void setJobCompleted(job* j){
 	set_job_status(j, COMPLETED);
 }
 
-void set_job_suspended(job* j){
+void setJobSuspended(job* j){
 	set_job_status(j, SUSPENDED);
 }
 
-void set_job_continued(job* j){
+void setJobContinued(job* j){
 	set_job_status(j, FOREGROUND);
 }
 
-int get_size(void){
+int getSize(void){
 	return size;
 }
 
-void print_command(commandType *command){
+void printCommand(commandType *command){
 	int i;
 
 	if(command->isInFile)
 		printf("%s <", command->inFile);
-
-	if(command->numPipes == 0 && commandType == NORMAL_CMD){
+	
+	//need to reclarify this partd
+	if(command->numPipes == 0){// && command->commandType == NORMAL_CMD){
 		print_info(&(command->CmdArray[0]));
 	}
 	else if(command->numPipes > 0){

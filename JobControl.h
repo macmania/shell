@@ -32,21 +32,24 @@ typedef struct job {
 	int stdin, stdout, stderr; //why do i need this??
 	int indexJob;
 	commandType *command;
+	struct parseInfo* cmdInfo;
 }job; 
 
-job* find_job(pid_t); 
-int is_job_stopped(job*);
-int is_job_completed(job*);
-void add_job(job*); 
-int delete_job(pid_t pgid); //returns 0 or 1 if job was successfully 
+void initProcess(void);
+job* findJob(pid_t); 
+int isJobStopped(job*);
+int isJobCompleted(job*);
+void addJob(job*); 
+int deleteJob(pid_t pgid); //returns 0 or 1 if job was successfully 
 						//deleted in the job pipeline and freed 
-					//successfully 
-int get_size(void);
-void free_process(process*);
-void free_job(job*);
-void set_job_completed(job*);
+					//successfully
+void deleteAllJobs(void); 
+int getSize(void);
+void freeProcess(process*);
+void freeJob(job*);
+void setCobCompleted(job*);
 
 //To-do
-process* get_job(void);
-int terminate_job(pid_t);
-void print_command(struct commandType*);
+process* getJob(void);
+int terminateJob(pid_t);
+void printCommand(struct commandType*);

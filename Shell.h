@@ -33,13 +33,14 @@ char* readCmdLine();
 int isBltInCmd();
 void execBltInCmd(job*);
 void launchProcess(job*);
+void readyJob(struct parseInfo*, commandType*);
 int isBackgroundJob(job*); //goes through a linked list to see if the command is paused
 
-void put_job_foreground(job*, int);
-void put_job_background(job*, int);
-void wait_for_job(job*);
-void continue_job(job*, int);
-void mark_job_as_running(job*);
+void putJobForeground(job*, int);
+void putJobBackground(job*, int);
+void waitForJob(job*);
+void continueJob(job*, int);
+void markJobAsRunning(job*);
 int isCmdEmpty(char*);
 void printErrMsg(enum Error_Messages, char*);
 //#endif

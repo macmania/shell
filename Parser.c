@@ -6,20 +6,21 @@
 #include <sys/stat.h>
 #include <ctype.h> 
 
-void init_info(struct parseInfo *p){
+void initInfo(struct parseInfo *p){
   p->command = malloc(sizeof(char)); 
   p->argVarNum = 0;
 }
 
 //parses each of the tokens given the command
 //still need to test with all of the base cases
-void parse_command(char *command, commandType *comm){
-  char *cmdTok, *delimeters, *cpyPtr;
-  char *prevTempCmdTok;
+void parseCommand(char *command, commandType *comm){
+  if(comm == NULL) printf("Error, command type pointer not initialized");
+	
+  char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok;
   char tempCmdTok[strlen(command)+1];
   int lenCommandStr=strlen(command)+1, locCmdType;
   char commandArrCopy[lenCommandStr];
-  char commandType; 
+  char cmdType; 
 
   delimeters = "&><|";
   strncpy(commandArrCopy, command, lenCommandStr);
@@ -32,11 +33,11 @@ void parse_command(char *command, commandType *comm){
   /**** --- To-do: need to improve the variable names --- ***/
   while(cmdTok){
     locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
-    commandType = cpyPtr[locCmdType];
+    cmdType = cpyPtr[locCmdType];
 
-    switch(commandType) {
-      
-      case '<': //redirect input file to the next command
+    
+    switch(cmdType) { 
+    	 case DIRECT_IN: //redirect input file to the next command
         strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); 
         tempCmdTok[strlen(cmdTok)] = '\0';
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
@@ -56,7 +57,7 @@ void parse_command(char *command, commandType *comm){
         comm->isInFile=1;
         break; 
 
-      case '>': //redirect output to specified file, signals the end of the command
+      case DIRECT_OUT: //redirect output to specified file, signals the end of the command
         strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added +1
         
         cmdTok = strtok(NULL, delimeters);
@@ -77,7 +78,7 @@ void parse_command(char *command, commandType *comm){
         strncpy(comm->outFile, prevTempCmdTok, strlen(prevTempCmdTok));
         break;
 
-      case '|': //need more information here or guidance at the very the least
+      case PIPE: //need more information here or guidance at the very the least
         //call an outside function here to set up comm->CmdArray that will save 
         cmdTok = strtok(NULL, delimeters);
         strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
@@ -93,7 +94,7 @@ void parse_command(char *command, commandType *comm){
 
         break;
 
-      case '&':
+      case BACKGROUND_INPUT:
         comm->status = BACKGROUND;
         break;
     }
@@ -103,10 +104,15 @@ void parse_command(char *command, commandType *comm){
   }
 
   cpyPtr = trimWhiteSpaces(cpyPtr); //time-consuming 
-  if(cpyPtr[strlen(cpyPtr)-1] == '&'){
+  if(cpyPtr[strlen(cpyPtr)-1] == BACKGROUND_INPUT){
     comm->status = FOREGROUND;
   }
-
+  if(comm->commandType != '\0') 
+	  comm->commandType = cmdType;
+  else{
+	  comm->commandType = NORMAL_CMD;
+  } 
+	  
 }
 
 char* trimWhiteSpaces(char* str){
@@ -124,6 +130,7 @@ char* trimWhiteSpaces(char* str){
   return str; 
 }
 
+//To-do, make this more succint, removed useless fields
 struct parseInfo* parse (char* cmdLine){
   char *tokCmds; 
   char tmpCmd[strlen(cmdLine)+1]; 
@@ -143,33 +150,42 @@ struct parseInfo* parse (char* cmdLine){
   int next = 0, past = 0, i=0; 
 
   for(; tmpCmd[next] != ' '; next++);
+  
   memcpy(result->command, &tmpCmd[past], next-past);
-  result->ArgVarList[i] = malloc(sizeof(char)); 
-  i++;
-  past = next;
-  next++;
-
-  for(; next < strlen(cmdLine); next++){
-    if(tmpCmd[next] == ' '){
-      result->ArgVarList[i] = malloc(sizeof(char));
-      memcpy(result->ArgVarList[i], &tmpCmd[past], next-past);
-      past = next; 
-      i++;
-    } 
+ 
+  if(isFile(result->command)){ //this still needs to be tested much further
+	  past = next;
+	  wait(1);
+	  for(; tmpCmd[next] != ' ' && tmpCmd[next] != DIRECT_IN; next++);
   }
-
-  if(past != next){
-    result->ArgVarList[i] = malloc(sizeof(char));
-    memcpy(result->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
-    i++;
+  else{
+	  result->ArgVarList[i] = malloc(sizeof(char)); 
+	  memcpy(result->ArgVarList[i], result->command, next-past); 
+	  i++;
+	  past = next;
+	  next++;
+	 
+	  for(; next < strlen(cmdLine); next++){
+		if(tmpCmd[next] == ' '){
+		  result->ArgVarList[i] = malloc(sizeof(char));
+		  memcpy(result->ArgVarList[i], &tmpCmd[past], next-past);
+		  past = next; 
+		  i++;
+		} 
+	  }
+	
+	  if(past != next){
+		result->ArgVarList[i] = malloc(sizeof(char));
+		memcpy(result->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
+		i++;
+	  }
+	  result->ArgVarList[i] = NULL;
+	  result->argVarNum = i;
   }
-  result->ArgVarList[i] = NULL;
-  result->argVarNum = i;
-
   return result; 
 }
 
-void print_info(struct parseInfo *info){
+void printInfo(struct parseInfo *info){
 	if(info == NULL) {
     return;
   }
@@ -182,7 +198,7 @@ void print_info(struct parseInfo *info){
   }
 }
 
-void free_info(struct parseInfo *info){
+void freeInfo(struct parseInfo *info){
 	printf("freeing memory block"); 
 	int i; 
   for(i = 0; i < info->argVarNum; i++){
@@ -192,13 +208,13 @@ void free_info(struct parseInfo *info){
 
 }
 
-int is_file(char* fileName){
+int isFile(char* fileName){
   struct stat buffer;
   return (stat(fileName, &buffer) == 0);
 }
 
 //goes through each character
-int is_proper_file(char* fileName){
+int isProperFile(char* fileName){
   for(;*fileName;fileName++){
     if(isspace(*fileName)) return 0;
   }
@@ -206,7 +222,7 @@ int is_proper_file(char* fileName){
 }
 
 /*Need to improve this error message more thoroughly**/
-void print_error(enum error_msg_parse msg) {
+void printError(enum error_msg_parse msg) {
   switch(msg){
     case FILE_NAME_NOT_FOUND: 
       printf("File or Directory not found\n"); 
@@ -219,37 +235,3 @@ void print_error(enum error_msg_parse msg) {
       break;
   }
 }
-
-//tests the methods, not yet adept in using test cases
-/**
-int main(void){
-  struct parseInfo* info; 
-  commandType* type, *type2; 
-
-  char* command = "input112 < echo > output &   ";
-  char* commandPipe = "ls -l | grep \"Apr\" > output &";
-
-  type = malloc(sizeof(commandType));
-  type2 = malloc(sizeof(commandType));
-  parse_command(command, type2);
-  parse_command(commandPipe, type);
-
-  int i; 
-  for(i=0; i < type->numPipes; i++){
-   
-    print_info(&type->CmdArray[i]);
-    //print_info(&type2->CmdArray[i]);
-    printf("\n");
-  }
-
- 
-
-
-  printf("\nin: %s out: %s bg: %d\n", type2->inFile, type2->outFile, type2->isBackground);
-
-  free(type);
-  free(type2);
-
-  return 0; 
-}
-*/
