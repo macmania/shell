@@ -13,9 +13,10 @@
 
 int i, parent, child, status;
 
-static void signal_handler(int signo)
+static void signal_handler(int signo)//, siginfo_t* t, void* context)
 {
-
+	int pid;
+	int status;
     /* signo contains the signal number that was received */
     switch( signo )
     {
@@ -26,7 +27,6 @@ static void signal_handler(int signo)
             fflush(stdout);
             printf( "Process %d: passing SIGINT to %d...\n", getpid(),child );
             kill( getpid(), SIGKILL);
-
             break;
         
         /*  It's a SIGQUIT */
@@ -36,8 +36,15 @@ static void signal_handler(int signo)
             printf( "Process %d: passing SIGQUIT to %d...\n", getpid(),child );
             kill( child, SIGQUIT );
             break;
+        case SIGCONT:
+        		printf("Process %d: received SIGCONT\n", getpid());
+        		fflush(stdout);
+        		break;
+        case SIGCHLD:
 
-
+        		printf("Process %d: received SIGCHLD\n", getpid());
+        		while((pid = wait(&status))){};
+        		break;
         default:
                 break;
     }
@@ -58,7 +65,7 @@ int main( int argc, char *argv[], char *env[] )
     {
         printf("Parent: Unable to create handler for SIGQUIT\n");
     }
-
+    signal(SIGCONT, signal_handler); signal(SIGCHLD, signal_handler);//, NULL);
     parent = getpid();
     printf( "Parent pid = %d\n", parent );
     	while(1){
@@ -70,7 +77,8 @@ int main( int argc, char *argv[], char *env[] )
 			/* Restore the default handler on SIGINT in the child */
 			signal( SIGINT, signal_handler );
 
-
+			signal(SIGCONT, signal_handler);
+			signal(SIGCHLD, SIG_IGN);
 			printf( "Child pid = %d\n", getpid() );
 			for( ;; )
 			{

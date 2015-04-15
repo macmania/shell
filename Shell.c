@@ -145,6 +145,15 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 	}
 }
 
+/*Shell job helper methods*/
+void put_job_background(job* j, int cont){
+
+}
+
+void put_job_foreground(job* j, int cont){
+
+}
+
 
 
 void printPrompt(){
@@ -186,13 +195,11 @@ char* readCmdLine(void){
   }
 }
 
-//Still need to test this and figure out how to add this in the job
-//pipeline
+//To-do, change the parameter type
 void execBltInCmd(struct parseInfo* cmd) {
   char* command = cmd->command;
   char** arg = cmd->ArgVarList;
   int argNum = cmd->argVarNum; 
-
 
   if(strcmp(command, "kill") == 0){
     if(argNum == 0) {
