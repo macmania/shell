@@ -35,10 +35,11 @@ void execBltInCmd(job*);
 void launchProcess(job*);
 int isBackgroundJob(job*); //goes through a linked list to see if the command is paused
 
-void put_job_foreground(job*, int cont);
-void put_job_background(job*, int cont);
-
-
+void put_job_foreground(job*, int);
+void put_job_background(job*, int);
+void wait_for_job(job*);
+void continue_job(job*, int);
+void mark_job_as_running(job*);
 int isCmdEmpty(char*);
 void printErrMsg(enum Error_Messages, char*);
 //#endif

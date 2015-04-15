@@ -23,40 +23,48 @@ struct termios shell_tmodes;
 
 int main (int argc, char** argv) {
 
-  init();
-  printPrompt();
-  int childPid, pPid;
-  while(TRUE) {
-
-  	char* cmdLine;
-  	struct parseInfo* cmd;
-  	commandType* cmdType;
-
-  	cmdLine = readCmdLine(); //tokenizes the commands
-  	//perhaps record the commands typed in a document
-  	if(isCmdEmpty(cmdLine)){
-  	  continue;
-  	}
-
-  	cmd = parse(cmdLine);
-  	parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
-
-  	if (isBltInCmd(cmd)){
-  	  execBltInCmd(cmd); //stop, etc.
-  	}
-  	else {
-  		childPid = fork();
-  		if(childPid == 0) {
-  		 /** addJob() **/
-  		  launchProcess(cmd); //calls execvp
-  		} else {
-  		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
-
-  		  if(EINTR == pPid)
-  			  printf("signal interrupt delivered to calling process");
-  		}
-  	}
-  }
+	int childPid, pPid;
+	struct sigaction sa;
+	  
+	init();
+	printPrompt();
+  
+  
+	while(TRUE) {
+		char* cmdLine;
+		struct parseInfo* cmd;
+		commandType* cmdType;
+	
+		cmdLine = readCmdLine(); 
+		
+		if(isCmdEmpty(cmdLine)){
+		  continue;
+		}
+	
+		cmd = parse(cmdLine);
+		parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
+	
+		if (isBltInCmd(cmd)){
+		  execBltInCmd(cmd); //stop, etc.
+		}
+		else {
+			childPid = fork();
+			if(childPid == 0) {
+				signal(SIGTSTP, SIG_DFL);
+				signal(SIGTTIN, SIG_DFL);
+				signal(SIGTTOU, SIG_DFL);
+				signal(SIGSTOP, SIG_DFL);
+				signal(SIGINT, SIG_DFL);
+				signal(SIGCONT, SIG_DFL);
+				launchProcess(cmd); 
+			} else {
+			  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
+	
+			  if(EINTR == pPid)
+				  printf("signal interrupt delivered to calling process");
+			}
+		}
+	  }
 }
 
 //initialize signal handlers
@@ -108,7 +116,6 @@ void init(void){
 	}
 }
 
-
 /*Signal Handlers**/
 void sigChldHandler(int sig, siginfo_t *si, void *context){
 	pid_t pid;
@@ -146,15 +153,54 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 }
 
 /*Shell job helper methods*/
-void put_job_background(job* j, int cont){
+void put_job_background(job* j, int doContinue){
+	if(doContinue){
+		kill(j->pgid, SIGCONT); //wakes up job
+	}
+}
+
+//gives job terminal access
+void put_job_foreground(job* j, int doContinue){
+	tcsetpgrp(shell_terminal, j->pgid);
+
+	if(doContinue){
+		tcsetattr(shell_terminal, &j->tmodes);
+
+		if(kill(j->pgid, SIGCONT) < 0)
+			perror("Error in sending continue signal");
+
+		wait_for_job(j);
+		
+		tcsetpgrp(shell_terminal, shell_pgid);
+		tcgetattr(shell_terminal, &t->modes);
+		tcsetattr(shell_terminal, shell_tmodes);
+
+	}
+
 
 }
 
-void put_job_foreground(job* j, int cont){
-
+//waits for child to terminate
+void wait_for_job(job* j){
+	int status;
+	while(wait_pid(WAIT_ANY, status, WUNTRACED | WNOHANG) > 0);
 }
 
+void mark_job_as_running (job *j){
+  Process *p;
+  
+  for (p = j->first_process; p; p = p->next)
+    p->stopped = 0;
+  j->notified = 0;
+}
 
+void continue_job (job *j, int foreground) {
+  mark_job_as_running (j);
+  if (foreground)
+    put_job_in_foreground (j, 1);
+  else
+    put_job_in_background (j, 1);
+}
 
 void printPrompt(){
   printf("*** Welcome to Jojo's small scale shell\n\n ****");
@@ -199,7 +245,7 @@ char* readCmdLine(void){
 void execBltInCmd(struct parseInfo* cmd) {
   char* command = cmd->command;
   char** arg = cmd->ArgVarList;
-  int argNum = cmd->argVarNum; 
+  int argNum = cmd->argVarNum;
 
   if(strcmp(command, "kill") == 0){
     if(argNum == 0) {
@@ -209,28 +255,28 @@ void execBltInCmd(struct parseInfo* cmd) {
     else if (argNum > 1){
       printErrMsg(LESS_NUM_ARGS, command);
     }
-      
+
     char* strPtrEnd;
     //kills the given job_pid
-      int jobID = strtol(arg[0], &strPtrEnd, 10); 
+      int jobID = strtol(arg[0], &strPtrEnd, 10);
       //this part is shaky, need to be more rigorous
       if(strPtrEnd != NULL){
         printErrMsg(NEED_NUMERIC_ARG, command);
         return;
       }
 
-      int errNum = kill(jobID, SIGINT); 
+      int errNum = kill(jobID, SIGINT);
       switch (errNum){
-        case EINVAL: 
+        case EINVAL:
           printf("Signal number not supported\n");
-          break; 
-        case EPERM: 
-          printf("Process does not have permission to send signal to any receiving process\n"); 
-          break; 
-        case ESRCH: 
-          printf("No process or process group can be found corresponding to pid: %d\n", jobID); 
-          break; 
-        default: 
+          break;
+        case EPERM:
+          printf("Process does not have permission to send signal to any receiving process\n");
+          break;
+        case ESRCH:
+          printf("No process or process group can be found corresponding to pid: %d\n", jobID);
+          break;
+        default:
           printf("Error %d due to kill command\n", errNum);
           break;
       }
@@ -239,7 +285,7 @@ void execBltInCmd(struct parseInfo* cmd) {
   if(strcmp(command, "cd") == 0){
     if(argNum > 2){
       printErrMsg(LESS_NUM_ARGS, command);
-      return; 
+      return;
     }
 
     struct stat buffer;
@@ -253,7 +299,7 @@ void execBltInCmd(struct parseInfo* cmd) {
         return;
       }
       strcpy(path, arg[0]);
-      //change the directory 
+      //change the directory
     }
     else {
       strcpy(path, getenv("HOME"));
@@ -263,18 +309,18 @@ void execBltInCmd(struct parseInfo* cmd) {
     if(chdir(path) == -1){
       printf("Command cd did not work\n");
     }
-    
+
     return;
   }
 
   if(argNum == 0){
 
     if(strcmp(command, "exit") == 0){
-      exit(EXIT_SUCCESS); //temporary :) 
+      exit(EXIT_SUCCESS); //temporary :)
       //kills of the jobs in the list
     }
     else if(strcmp(command, "jobs") == 0){
-      //need to have a running list that has the list of jobs that are running on the background, etc. 
+      //need to have a running list that has the list of jobs that are running on the background, etc.
       //prints all of the current and background jobs
     }
 
@@ -284,16 +330,16 @@ void execBltInCmd(struct parseInfo* cmd) {
     }
 
   }
-  
-  else 
-    printErrMsg(LESS_NUM_ARGS, command); 
+
+  else
+    printErrMsg(LESS_NUM_ARGS, command);
 }
 
 //temporary, only built in command is exit for now
 int isBltInCmd(struct parseInfo* cmd){
   char* command = cmd->command;
   if(strcmp(command, "exit") == 0 || strcmp(command, "jobs") == 0 ||
-       strcmp(command, "cd") == 0 || strcmp(command, "kill") == 0 || 
+       strcmp(command, "cd") == 0 || strcmp(command, "kill") == 0 ||
           strcmp(command, "history") == 0){
     return TRUE;
   }
@@ -307,21 +353,21 @@ int isCmdEmpty(char* cmd){
   return FALSE;
 }
 
-//prints error message based on the error message built in 
+//prints error message based on the error message built in
 void printErrMsg(enum Error_Messages msg, char* cmd) {
   printf("%s: ", cmd);
 
   if(msg == LESS_NUM_ARGS) {
-    printf("incorrect number of arguments passed"); 
+    printf("incorrect number of arguments passed");
   }
   else if(msg == MORE_NUM_ARGS) {
-    printf("need more information to run command"); 
+    printf("need more information to run command");
   }
   else if(msg == NEED_NUMERIC_ARG) {
-    printf("numergic argument required"); 
+    printf("numergic argument required");
   }
   else if(msg == FILE_NAME_INCOR){
-    printf("No such file or directory"); 
+    printf("No such file or directory");
   }
   printf("\n");
 }
