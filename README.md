@@ -22,24 +22,26 @@
 	
 	The management of commands holds the appropriate signal handlers for commands executed. 
 	I've followed the signals as it shows in the GNU C library on Job Control Signals. 
-	For this part, I will be handling the following signals: 
+	For this part, I will be handling SIGCHLD signal. 
 	
-* SIGCHLD 
-* SIGINT 
-* SIGTSTP 
-* SIGCONT 
-* SIGTTOU 
-* SIGTTIN
+	***Note, this is a temporary design decision. After finishing the initial phase of this shell,
+	I will explore other methods in handling processes as fit - aka provide better maintenance
+	and performance.***
 	
-	I've decided to encapsulate the job scheduler to its own class. This class determines which 
-	job to run based on its niceness and other things (To-do) 
+	For the sigchld handler, I've used library macros from sys/wait.h to determine the cause of 
+	a child's (in this case, the processes that are running from the shell) interrupt. By doing
+	so, the sigchld handler determines the course of action appropriate for the child's interrupt.
+	  - For instance, if the child was interrupted by a SIGSTOP signal (ctrl-z user input), the 
+	    job's process status is changed from 'R'(running) to 'S'(suspended). 
+	
+	I've decided to encapsulate the job scheduler to its own class.
 
 ## Motivation
 	I wanted to have a better grasp on signal handlers, processes and job scheduling. My aim is to 
 	improve my knowledge on kernel development and security. 
 
 	In addition, I hope to use this shell as a systems application for small-scale machines such
-	as mobile phones and/or arduinos. 
+	as mobile phones and/or arduinos.
 	
 ## Installation
 	Run make and type ./shell
