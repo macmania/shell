@@ -47,7 +47,7 @@ int main (int argc, char** argv) {
   	else {
   		childPid = fork();
   		if(childPid == 0) {
-  		  //To-do
+  		 /** addJob() **/
   		  launchProcess(cmd); //calls execvp
   		} else {
   		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
@@ -71,10 +71,13 @@ void init(void){
 	    while (tcgetpgrp (shell_fd) != (shell_pgid = getpgrp ()))
 	        kill (pid, SIGTTIN);
 
-	    //ignore these signals
+	    //ignore these signals, these signals will be handled by the child
 	    signal(SIGTSTP, SIG_IGN);
 	    signal(SIGTTIN, SIG_IGN);
 	    signal(SIGTTOU, SIG_IGN);
+	    signal(SIGSTOP, SIG_IGN);
+	    signal(SIGINT, SIG_IGN);
+	    signal(SIGCONT, SIG_IGN);
 
 		struct sigaction sa;
 		struct sigaction saChld;
@@ -88,9 +91,6 @@ void init(void){
 		saChld = SA_RESTART;
 
 		//this deals with signals associated with
-		sigaction(SIGSTOP, &sa, NULL);
-		sigaction(SIGINT, &sa, NULL);
-		sigaction(SIGCONT, &sa, NULL);
 		sigaction(SIGCHLD, &saChld, NULL);
 
 		shell_pgid = getpid();
@@ -140,35 +140,11 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 		}
 		else if(WIFCONTINUED(status)){
 			set_job_continued(j);
-			kill(j->pgid, SIGCONT); //iffy
+			put_job_foreground(j);
 		}
 	}
 }
 
-
-void sigHandlers(int sig, siginfo_t *si, void *context) {
-	int pid = getpid(); //the pid of the child
-	job* j = getJob(pid, BY_PROCESS_ID);
-
-	switch(sig){
-		case SIGCONT:  //Ready -> Running
-		  set_job_continued(j);
-
-		  break;
-		case SIGTTIN:
-				/*To-do, process attempts to read from the terminal, the default action is
-				 * to terminate the process**/
-		  break;
-		case SIGTTOU:
-		  /* To-do, process attempts to write to the terminal or change the termios, default action
-		   * is to terminate the process
-		   */
-			 break;
-		case SIGINT:
-
-		 break;
-  }
-}
 
 
 void printPrompt(){

@@ -25,7 +25,8 @@ static void signal_handler(int signo)
             printf( "Process %d: received SIGINT (Ctrl-C)\n", getpid() );
             fflush(stdout);
             printf( "Process %d: passing SIGINT to %d...\n", getpid(),child );
-            kill( getpid(), SIGKILL );
+            kill( getpid(), SIGKILL);
+
             break;
         
         /*  It's a SIGQUIT */
@@ -36,12 +37,15 @@ static void signal_handler(int signo)
             kill( child, SIGQUIT );
             break;
 
+
         default:
                 break;
     }
 
     return;
 }
+
+
 
 int main( int argc, char *argv[], char *env[] )
 {
@@ -57,73 +61,54 @@ int main( int argc, char *argv[], char *env[] )
 
     parent = getpid();
     printf( "Parent pid = %d\n", parent );
+    	while(1){
+		if( (child = fork()) == 0 )
+		{
+			/* Ignore the signals that are supposed to be received by the parent*/
+			signal( SIGQUIT, SIG_IGN );
 
-    if( (child = fork()) == 0 )
-    {
-        /* Ignore the signals that are supposed to be received by the parent*/
-        signal( SIGQUIT, SIG_IGN );
-
-        /* Restore the default handler on SIGINT in the child */
-        signal( SIGINT, signal_handler );
+			/* Restore the default handler on SIGINT in the child */
+			signal( SIGINT, signal_handler );
 
 
-        printf( "Child pid = %d\n", getpid() );
-        for( ;; )
-        {
-            sleep( 1 );
-        }
-    }
-    else
-    {
-        /* 
-         * This waits for ANY child to die.  It doesn't matter if the child
-         * dies normally or from a signal.  The satus information is then
-         * stored in the status integer.
-         */
-        int pid = wait(&status);
-        printf("%d ID", pid);
-        
-        /*
-         * The information in status is *NOT* the return code!!  To make use
-         * of the information we must macros to extract the needed
-         * information.
-         */
+			printf( "Child pid = %d\n", getpid() );
+			for( ;; )
+			{
+				sleep( 1 );
+			}
+		}
+		else
+		{
+			int pid = wait(&status);
+			printf("%d ID", pid);
 
-        /* WIFEXITED() determines if the process exitec normally (returned a
-         * number).  This can be done through a return or exit()
-         */
+			if( WIFEXITED( status ) )
+			{
 
-        if( WIFEXITED( status ) )
-        {
-            /* 
-             * Now we know the process exited properly so we can get the
-             * return value
-             */
+				printf( "Child return - %d\n", WEXITSTATUS( status ) );
+			}
+			else
+			{
+				/* Well it didn't exited properly.  Was it a signal? */
+				if( WIFSIGNALED( status ) )
+				{
+					/*
+					 * Yes. A signal killed the child process.  Now we can extract
+					 * the signal information from status
+					 */
 
-            printf( "Child return - %d\n", WEXITSTATUS( status ) );
-        }
-        else
-        {
-            /* Well it didn't exited properly.  Was it a signal? */
-            if( WIFSIGNALED( status ) )
-            {
-                /* 
-                 * Yes. A signal killed the child process.  Now we can extract
-                 * the signal information from status
-                 */
-                
-                printf( "Child died on signal - %d\n", WTERMSIG( status ));
-            }
-        }
+					printf( "Child died on signal - %d\n", WTERMSIG( status ));
+				}
+			}
 
-        /* 
-         * There are two other macros most UNIXes use.  They are:
-         *  WIFSTOPPED() and WSTOPSIG().  See the man pages on the dells for
-         *  more information.
-         *
-         *  To wait on a particular pid - see waitpid()
-         */
-    }
-
+			/*
+			 * There are two other macros most UNIXes use.  They are:
+			 *  WIFSTOPPED() and WSTOPSIG().  See the man pages on the dells for
+			 *  more information.
+			 *
+			 *  To wait on a particular pid - see waitpid()
+			 */
+		}
+    	}
     return 0;
 }
