@@ -24,7 +24,7 @@ typedef struct process {
 typedef struct job {
 	struct job *next; 
 	struct job *previous; 
-	process *firstProcess; 
+	process *first_process; 
 	pid_t pgid; 
 	int jobID; //number of active jobs
 	char notified; 

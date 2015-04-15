@@ -79,8 +79,8 @@ void free_process(process *head){
 
 //do i need to free termios variable?
 void free_job(job* j){
-	if(j->firstProcess != NULL){
-		free_process(j->firstProcess);
+	if(j->first_process != NULL){
+		free_process(j->first_process);
 	}
 
 	j->next = NULL; 
@@ -102,7 +102,7 @@ int is_job_stopped(job *head){
 
 int is_job_completed(job *head){
 	process *p; 
-	for(p = (process*)head->firstProcess; p; p = p->next)
+	for(p = (process*)head->first_process; p; p = p->next)
 		if(p->status == BACKGROUND)
 			return 0; 
 	return 1; 
@@ -114,7 +114,7 @@ void set_job_status(job *j, int status){
 		return;
 	}
 	process *p;
-	for(p = (process*)j->firstProcess; p; p = p->next){
+	for(p = (process*)j->first_process; p; p = p->next){
 		p->status = status;
 	}
 }
