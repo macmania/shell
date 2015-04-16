@@ -10,8 +10,7 @@
 /** Single process **/
 typedef struct process {
 	struct process *next; 
-	pid_t pid;
-	char stopped; 
+	pid_t pid; 
 	int status;
 	struct parseInfo* cmdInfo;
 }process; 
@@ -43,6 +42,7 @@ void addJob(job*);
 int deleteJob(pid_t pgid); //returns 0 or 1 if job was successfully 
 						//deleted in the job pipeline and freed 
 					//successfully
+void* addJob(struct parseInfo*, int);
 void deleteAllJobs(void); 
 int getSize(void);
 void freeProcess(process*);

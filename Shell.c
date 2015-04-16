@@ -107,12 +107,33 @@ void init(void){
 //To-do, add to a list for future viewing 
 job* readyJob(struct parseInfo* firstCmd, commandType* cmd, job* j){
 	//makes a new job and save all of these information 
-	j->command = cmd;
-	//j->cmdInfo = firstCmd;
-
-	/***To-do **/
+	parseInfo* tempPipes; 
 	
-	return NULL;
+	j->command = cmd;
+	
+	j->firstProcess = malloc(sizeof(process));
+	
+	if(cmd->numPipes == 0){ 
+		j->firstProcess->cmdInfo = firstCmd;
+		return j;
+	}
+	else{ //assign each command its own process
+		int i; 
+		parseInfo cmdInfo[];
+		
+		cmdInfo = cmd->CmdArray;
+		
+		for(i = cmd->numPipes - 1;i > -1; i--){ 
+			process *add = malloc(sizeof(process));
+			addProcess(j->firstProcess, add, cmdInfo[i]);
+		}
+		
+		process* first = malloc(sizeof(process));
+		first->cmdInfo = firstCmd;
+		addProcess(j->firstProcess, first);
+	}
+	
+	return j;
 }
 
 //passes this job and add to the job list
@@ -408,4 +429,22 @@ void killAllJobs(){
 			freeJob(head);
 		}
 		free(head);
+}
+
+
+job* getJob(pid_t pid, int searchCriteria){
+	if(*firstJob == NULL){
+		perror("Job pipeline empty"); fflush(0);
+		return NULL;
+	}
+	job *head;//, *result;
+	process* proc;
+	for(head = (job*)*firstJob; head; head = head->next){
+		for(proc = head->firstProcess; proc; proc = proc->next){
+			if(proc->pid == pid)
+				return head;
+		}
+	}
+	perror("unable to find job"); fflush(0);
+	return NULL;
 }

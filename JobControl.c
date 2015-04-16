@@ -6,7 +6,8 @@
 //Implementation of methods in job control
 //Temporary job control
  //list to hold the stopped jobs
-volatile int size;
+
+volatile int size; //testing purpose
 
 
 void initProcess(process* p) {
@@ -33,6 +34,25 @@ void addJob(job* newJob){
 		*firstJob = newJob;
 	}
 	size++; 
+}
+
+void addProcess(process* head, process* p, parseInfo *cmd){
+	if(p == NULL || head == NULL) {
+		perror("Cannot add an empty process"); fflush(0); 
+		return;
+	}
+	
+	p->cmdInfo = cmd;
+	
+	if(*head == NULL){
+		p->next = NULL;
+		*head = (process*) head;
+	}
+	else{
+		p->next = head;
+		head = p; 
+	}
+	
 }
 
 int deleteJob(pid_t pgid) {
@@ -159,3 +179,5 @@ void printCommand(commandType *command){
 		printf(" &");
 	}
 }
+
+
