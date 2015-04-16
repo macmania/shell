@@ -13,6 +13,7 @@ typedef struct process {
 	pid_t pid;
 	char stopped; 
 	int status;
+	struct parseInfo* cmdInfo;
 }process; 
 
 /* pipeline of processes */
@@ -32,7 +33,6 @@ typedef struct job {
 	int stdin, stdout, stderr; //why do i need this??
 	int indexJob;
 	commandType *command;
-	struct parseInfo* cmdInfo;
 }job; 
 
 void initProcess(void);

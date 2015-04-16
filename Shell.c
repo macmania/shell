@@ -19,6 +19,7 @@ static pid_t shell_pgid;
 static int shell_terminal, shell_interactive;
 static int sizeStoppedJobs;
 struct termios shell_tmodes;
+
 volatile job **firstJob;
 
 int main (int argc, char** argv) {
@@ -107,7 +108,7 @@ void init(void){
 job* readyJob(struct parseInfo* firstCmd, commandType* cmd, job* j){
 	//makes a new job and save all of these information 
 	j->command = cmd;
-	j->cmdInfo = firstCmd;
+	//j->cmdInfo = firstCmd;
 
 	/***To-do **/
 	
@@ -115,7 +116,7 @@ job* readyJob(struct parseInfo* firstCmd, commandType* cmd, job* j){
 }
 
 //passes this job and add to the job list
-void launchProcess(job* j){
+void launchJob(job* j){
 	int childPid, pPid;
 	struct sigaction sa;
 	
@@ -134,7 +135,8 @@ void launchProcess(job* j){
 		sigaction(SIGCHLD, &sa, NULL); 
 		j->pgid = getpid();
 		add(j);
-		execvp(j->cmdInfo->command, j->cmdInfo->ArgVarList);
+		
+		//execvp(j->cmdInfo->command, j->cmdInfo->ArgVarList);
 	} else {
 	  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
 
