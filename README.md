@@ -47,7 +47,7 @@
 	Run make and type ./shell
 	
 ## Tests
-	To-be implemented
+	Must install check - a C unit testing framework
 	
 ## Contributors
 	Jouella Fabe

@@ -137,7 +137,7 @@ job* readyJob(struct parseInfo* firstCmd, commandType* cmd, job* j){
 }
 
 //passes this job and add to the job list
-void launchJob(job* j){
+void launchJob(job* j) {
 	int childPid, pPid;
 	struct sigaction sa;
 	
@@ -145,25 +145,27 @@ void launchJob(job* j){
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	
-	childPid = fork();
-	if(childPid == 0) {
-		signal(SIGTSTP, SIG_DFL);
-		signal(SIGTTIN, SIG_DFL);
-		signal(SIGTTOU, SIG_DFL);
-		signal(SIGSTOP, SIG_DFL);
-		signal(SIGINT, SIG_DFL);
-		signal(SIGCONT, SIG_DFL);
-		sigaction(SIGCHLD, &sa, NULL); 
-		j->pgid = getpid();
-		add(j);
-		
-		//execvp(j->cmdInfo->command, j->cmdInfo->ArgVarList);
-	} else {
-	  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
-
-	  if(EINTR == pPid)
-		  printf("signal interrupt delivered to calling process");
+	process* p = j->firstProcess;
+	
+	for(p = j->firstProcess; p; p = p->nextProcess){
+		childPid = fork();
+		if(childPid == 0) { //still need to work on how to redirect piping
+			signal(SIGTSTP, SIG_DFL);
+			signal(SIGTTIN, SIG_DFL);
+			signal(SIGTTOU, SIG_DFL);
+			signal(SIGSTOP, SIG_DFL);
+			signal(SIGINT, SIG_DFL);
+			signal(SIGCONT, SIG_DFL);
+			sigaction(SIGCHLD, &sa, NULL); 
+			execvp(p->command, p->ArgVarList);
+		} else {
+		  j->pgid = getpid();
+		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
+		  if(EINTR == pPid)
+			  printf("signal interrupt delivered to calling process");
+		}
 	}
+	add(j);
 }
 
 
