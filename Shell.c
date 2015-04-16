@@ -204,7 +204,6 @@ void putJobForeground(job* j, int doContinue){
 		tcsetpgrp(shell_terminal, shell_pgid);
 		tcgetattr(shell_terminal, &j->tmodes);
 		tcsetattr(shell_terminal, shell_tmodes);
-
 	}
 
 
