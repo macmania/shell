@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h> 
-#include "/Users/jojofabe/Workspace/c/shell/Parser.h"
+#include "/Users/jojofabe/workspace/spring/OS/shell/Parser.h"
 
 int main(int argc, char** arg) {
   // char* sampleChar;

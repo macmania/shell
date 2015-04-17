@@ -1,3 +1,2 @@
-SUBDIRS = src
-bin_PROGRAMS = shell
-shell_SOURCES = Shell.c
+bin_programs = shell
+shell_sources = Parser.c Shell.c JobControl.c Parser.h JobControl.h
