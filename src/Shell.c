@@ -13,47 +13,12 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
-#include "Shell.h"
+
 
 static pid_t shell_pgid;
 static int shell_terminal, shell_interactive;
 static int sizeStoppedJobs;
 struct termios shell_tmodes;
-
-volatile job **firstJob;
-
-int main (int argc, char** argv) {
-	init();
-	printPrompt();
-	firstJob = (volatile struct job**) malloc(sizeof(struct job));
-	while(TRUE) {
-		char* cmdLine;
-		struct parseInfo* cmd;
-		commandType* cmdType;
-		cmdType = malloc(sizeof(commandType));
-		
-		printf("shell: ");
-		cmdLine = readCmdLine(); 
-		
-		if(isCmdEmpty(cmdLine)){
-		  continue;
-		}
-
-		cmd = parse(cmdLine);
-		parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
-		
-		if (isBltInCmd(cmd)){ //Limitations, built in commands cannot handle &, | or so 
-								//for now
-		  execBltInCmd(cmd); //stop, etc.
-		}
-		else {
-			job* j = malloc(sizeof(job));
-			j = readyJob(cmd, cmdType, j);
-			launchJob(j);
-		}
-	  }
-	printf("\n");
-}
 
 //initialize signal handlers
 //set up the shell as its own process group
