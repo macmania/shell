@@ -390,7 +390,8 @@ void killAllJobs(){
 	job* head;
 	for(; head; firstJob = &((*firstJob)->next)){
 		head = (job*)(*firstJob);
-		kill(head->pgid, SIGKILL);
+		if(head->pgid != 0)
+			kill(head->pgid, SIGKILL);
 		freeJob(head);
 	}
 	free(head);
