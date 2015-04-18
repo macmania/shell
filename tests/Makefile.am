@@ -1,5 +1,5 @@
 TESTS = shelltests
-shell_PROGRAMS = shelltests
-shelltests_SOURCES = shelltests.c $(top_builddir)/src/shell.h 
-shelltests_CFLAGS = @CHECK_CFLAGS@
-shelltests_LDADD = $(top_buildir)/src/shell.la @CHECK_LIBS@
+SHELLTESTS_PROGRAMS = shelltests
+ShellTests_SOURCES = ShellTests.c $(top_builddir)/src/Shell.h $(top_builddir)/src/Parser.h $(top_builddir)/src/JobControl.h 
+ShellTests_CFLAGS = @CHECK_CFLAGS@
+ShellTests_LDADD = $(top_builddir)/src/libshell.la @CHECK_LIBS@
