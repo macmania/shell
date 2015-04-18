@@ -9,8 +9,9 @@
 #define BACKGROUND 0
 #define FOREGROUND 1
 #define SUSPENDED 2
-#define WAIT_INPUT 3
-#define COMPLETED 4
+#define RUNNING 3
+#define WAIT_INPUT 4
+#define COMPLETED 5
 
 
 #define DIRECT_IN '<'
@@ -52,6 +53,7 @@ void parseCommand(char*, commandType*);
 struct parseInfo* parse (char*);
 void printInfo(struct parseInfo*);
 void freeInfo(struct parseInfo*);
+void freeCmdType(commandType*);
 void printError(enum error_msg_parse);
 int isFile(char* fileName); 
 char* trimWhiteSpaces(char*);

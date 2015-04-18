@@ -4,7 +4,6 @@
   unix like shell (be able to handle fork and parent stuff)
   Part 2: handle multi-threading
 **/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -13,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
+#include "Shell.h"
 
 
 static pid_t shell_pgid;
@@ -27,7 +27,8 @@ void init(void){
 
 	shell_terminal = STDIN_FILENO; //file descriptor for terminal
 	shell_interactive = isatty(shell_terminal); //tests whether it's a fd to terminal
-
+	
+	
 	if(shell_interactive){
 	    while (tcgetpgrp (shell_terminal) != (shell_pgid = getpgrp ()))
 	        kill (pid, SIGTTIN);
@@ -43,13 +44,13 @@ void init(void){
 		struct sigaction sa;
 		struct sigaction saChld;
 
-		sa.sa_sigaction = sigHandlers;
+		sa.sa_sigaction = &sigHandlers;
 		sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
 		sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
 
-		saChld.sa_sigaction = &saChld;
+		saChld.sa_sigaction = &sigChldHandler;
 		sigemptyset(&saChld.sa_mask);
-		saChld = SA_RESTART;
+		saChld.sa_flags = SA_RESTART;
 
 		//this deals with signals associated with
 		sigaction(SIGCHLD, &saChld, NULL);
@@ -60,7 +61,7 @@ void init(void){
 			exit(EXIT_FAILURE);
 		}
 
-		tcsetgrp(shell_terminal, shell_pgid);
+		tcsetpgrp(shell_terminal, shell_pgid);
 		tcgetattr(shell_terminal, &shell_tmodes);
 	}
 	else{
@@ -70,32 +71,31 @@ void init(void){
 }
 
 //To-do, add to a list for future viewing 
-job* readyJob(struct parseInfo* firstCmd, commandType* cmd, job* j){
+job* readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job* j){
 	//makes a new job and save all of these information 
-	parseInfo* tempPipes; 
+	struct parseInfo* tempPipes; 
 	
 	j->command = cmd;
+	j->commandStr = malloc(sizeof(char));
+	j->first_process = malloc(sizeof(process));
 	
-	j->firstProcess = malloc(sizeof(process));
+	strcpy(j->commandStr, cmdStr);
 	
 	if(cmd->numPipes == 0){ 
-		j->firstProcess->cmdInfo = firstCmd;
+		j->first_process->cmdInfo = firstCmd;
 		return j;
 	}
 	else{ //assign each command its own process
 		int i; 
-		parseInfo cmdInfo[];
-		
-		cmdInfo = cmd->CmdArray;
+		//struct parseInfo cmdInfo[] = cmd->CmdArray;
 		
 		for(i = cmd->numPipes - 1;i > -1; i--){ 
 			process *add = malloc(sizeof(process));
-			addProcess(j->firstProcess, add, cmdInfo[i]);
+			addProcess(j->first_process, add, &cmd->CmdArray[i]);
 		}
 		
 		process* first = malloc(sizeof(process));
-		first->cmdInfo = firstCmd;
-		addProcess(j->firstProcess, first);
+		addProcess(j->first_process, first, firstCmd);
 	}
 	
 	return j;
@@ -110,9 +110,9 @@ void launchJob(job* j) {
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	
-	process* p = j->firstProcess;
+	process* p = j->first_process;
 	
-	for(p = j->firstProcess; p; p = p->nextProcess){
+	for(p = j->first_process; p; p = p->next){
 		childPid = fork();
 		if(childPid == 0) { //still need to work on how to redirect piping
 			signal(SIGTSTP, SIG_DFL);
@@ -122,7 +122,7 @@ void launchJob(job* j) {
 			signal(SIGINT, SIG_DFL);
 			signal(SIGCONT, SIG_DFL);
 			sigaction(SIGCHLD, &sa, NULL); 
-			execvp(p->command, p->ArgVarList);
+			execvp(p->cmdInfo->command, p->cmdInfo->ArgVarList);
 		} else {
 		  j->pgid = getpid();
 		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
@@ -130,7 +130,7 @@ void launchJob(job* j) {
 			  printf("signal interrupt delivered to calling process");
 		}
 	}
-	add(j);
+	addJob(firstJob, j);
 }
 
 
@@ -148,75 +148,74 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 			return;
 		}
 		else if(WIFEXITED(status)){ //
-			set_job_completed(j);
+			setJobCompleted(j);
 			printf("Job done");
-			print_info(j->command);
+			printf("%s", j->commandStr);
 			printf("\n");
-			delete_job(j); //To-do change delete_job method in JobControl.c
+			deleteJob(firstJob, j); //To-do change delete_job method in JobControl.c
 		}
 		else if(WIFSIGNALED(status)){ //delete job
 			printf("The job below was not handled properly\n");
-			print_info(j->command);
-			delete_job(j); //temporary fix
+			printf("%s", j->commandStr);
+			deleteJob(firstJob, j); //temporary fix
 		}
 		else if(WIFSTOPPED(status)){ //child process has been sent stopped signal
 			sizeStoppedJobs++;
-			setJobBackground(j);
+			setJobBackground(j, FALSE);
+			setJobSuspended(j);
 		}
 		else if(WIFCONTINUED(status)){
 			setJobContinued(j);
-			putJobForeground(j);
+			setJobForeground(j, TRUE);
 		}
 	}
 }
 
 /*Shell job helper methods*/
-void putJobBackground(job* j, int doContinue){
+void setJobBackground(job* j, int doContinue){
 	if(doContinue){
 		kill(j->pgid, SIGCONT); //wakes up job
 	}
 }
 
 //gives job terminal access
-void putJobForeground(job* j, int doContinue){
+void setJobForeground(job* j, int doContinue){
 	tcsetpgrp(shell_terminal, j->pgid);
 
 	if(doContinue){
-		tcsetattr(shell_terminal, &j->tmodes);
+		tcsetattr(shell_terminal, TCSANOW, &j->tmodes);
 
 		if(kill(j->pgid, SIGCONT) < 0)
 			perror("Error in sending continue signal");
 
-		wait_for_job(j);
+		waitForJob(j);
 		
 		tcsetpgrp(shell_terminal, shell_pgid);
 		tcgetattr(shell_terminal, &j->tmodes);
-		tcsetattr(shell_terminal, shell_tmodes);
+		tcsetattr(shell_terminal,TCSANOW, &shell_tmodes);
 	}
-
-
 }
 
 //waits for child to terminate
 void waitForJob(job* j){
 	int status;
-	while(wait_pid(WAIT_ANY, status, WUNTRACED | WNOHANG) > 0);
+	while(waitpid(WAIT_ANY, &status, WUNTRACED | WNOHANG) > 0);
 }
 
 void markJobAsRunning (job *j){
   process *p;
  
   for (p = j->first_process; p; p = p->next)
-    p->stopped = 0;
+    p->status = FOREGROUND;
   j->notified = 0;
 }
 
 void continueJob (job *j, int foreground) {
-  mark_job_as_running (j);
+  markJobAsRunning (j);
   if (foreground)
-    put_job_in_foreground (j, 1);
+    setJobForeground (j, 1);
   else
-    put_job_in_background (j, 1);
+    setJobBackground (j, 1);
 }
 
 void printPrompt(){
@@ -387,18 +386,17 @@ void printErrMsg(enum Error_Messages msg, char* cmd) {
   printf("\n");
 }
 
-
 void killAllJobs(){
 	job* head;
-		for(; head; *firstJob = *firstJob->next){
-			head = *firstJob;
-			signal(head->pgid, SIGKILL);
-			freeJob(head);
-		}
-		free(head);
+	for(; head; firstJob = &((*firstJob)->next)){
+		head = (job*)(*firstJob);
+		kill(head->pgid, SIGKILL);
+		freeJob(head);
+	}
+	free(head);
 }
 
-
+/*To-do**/
 job* getJob(pid_t pid, int searchCriteria){
 	if(*firstJob == NULL){
 		perror("Job pipeline empty"); fflush(0);
@@ -407,7 +405,7 @@ job* getJob(pid_t pid, int searchCriteria){
 	job *head;//, *result;
 	process* proc;
 	for(head = (job*)*firstJob; head; head = head->next){
-		for(proc = head->firstProcess; proc; proc = proc->next){
+		for(proc = head->first_process; proc; proc = proc->next){
 			if(proc->pid == pid)
 				return head;
 		}

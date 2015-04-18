@@ -43,13 +43,13 @@ void parseCommand(char *command, commandType *comm){
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
 
         
-        if(!is_proper_file(prevTempCmdTok)){
-          print_error(UNKNOWN_CMD); //may need to raise some sort of error or so
+        if(!isProperFile(prevTempCmdTok)){
+          printError(UNKNOWN_CMD); //may need to raise some sort of error or so
           return;
         }
         
-        if(!is_file(prevTempCmdTok)){
-          print_error(FILE_NAME_NOT_FOUND);
+        if(!isFile(prevTempCmdTok)){
+          printError(FILE_NAME_NOT_FOUND);
           return;
         }
 
@@ -62,15 +62,15 @@ void parseCommand(char *command, commandType *comm){
         
         cmdTok = strtok(NULL, delimeters);
         if(!cmdTok){
-          print_error(NO_FILE_ENTERED);
+          printError(NO_FILE_ENTERED);
           return;
         }
         strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added+ 1
         tempCmdTok[strlen(cmdTok)] = '\0';
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
 
-        if(!is_proper_file(prevTempCmdTok)){
-          print_error(UNKNOWN_CMD);
+        if(!isProperFile(prevTempCmdTok)){
+          printError(UNKNOWN_CMD);
           return;
         }
 
@@ -85,7 +85,7 @@ void parseCommand(char *command, commandType *comm){
         tempCmdTok[strlen(cmdTok)] = '\0';
         if(tempCmdTok == NULL){
           //may need to change some stuff or so 
-          print_error(UNKNOWN_CMD);
+          printError(UNKNOWN_CMD);
           return;
         }
         prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
@@ -139,7 +139,7 @@ struct parseInfo* parse (char* cmdLine){
   result = malloc(sizeof(struct parseInfo));  
   strcpy(tmpCmd, cmdLine);
   tmpCmd[strlen(cmdLine)] = '\0';
-  init_info(result); 
+  initInfo(result); 
 
   if(result == NULL){
     fprintf(stderr, "cannot initialize memory block"); 
@@ -155,7 +155,7 @@ struct parseInfo* parse (char* cmdLine){
  
   if(isFile(result->command)){ //this still needs to be tested much further
 	  past = next;
-	  wait(1);
+	  sleep(1);
 	  for(; tmpCmd[next] != ' ' && tmpCmd[next] != DIRECT_IN; next++);
   }
   else{
@@ -206,6 +206,13 @@ void freeInfo(struct parseInfo *info){
   }
   free(info); 
 
+}
+
+void freeCmdType(commandType* cmd){
+	int i; 
+	
+	for(i = 0; i < cmd->numPipes; i++)	
+		freeInfo(&(cmd->CmdArray[i]));
 }
 
 int isFile(char* fileName){

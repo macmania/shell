@@ -17,13 +17,12 @@ void initProcess(process* p) {
 //adds the first job 
 //need to call parse_job first before adding the job. 
 //makes this confusing if not handled appropriately
-void addJob(job* newJob){
+void addJob(job** firstJob, job* newJob){
 	if(newJob == NULL){
 		return; 
 	}
 
 	if(firstJob == NULL){
-		firstJob = (volatile struct job**) malloc(sizeof(struct job));
 		newJob->next = NULL; 
 		newJob->previous = NULL;
 		*firstJob = newJob; 
@@ -36,7 +35,7 @@ void addJob(job* newJob){
 	size++; 
 }
 
-void addProcess(process* head, process* p, parseInfo *cmd){
+void addProcess(process* head, process* p, struct parseInfo *cmd){
 	if(p == NULL || head == NULL) {
 		perror("Cannot add an empty process"); fflush(0); 
 		return;
@@ -44,9 +43,9 @@ void addProcess(process* head, process* p, parseInfo *cmd){
 	
 	p->cmdInfo = cmd;
 	
-	if(*head == NULL){
+	if(head == NULL){
 		p->next = NULL;
-		*head = (process*) head;
+		head = (process*) head;
 	}
 	else{
 		p->next = head;
@@ -55,9 +54,7 @@ void addProcess(process* head, process* p, parseInfo *cmd){
 	
 }
 
-int deleteJob(pid_t pgid) {
-	job* j = find_job(pgid);
-
+int deleteJob(job** firstJob, job* j) {
 	if(j == NULL) 
 		return 0; 
 
@@ -71,15 +68,15 @@ int deleteJob(pid_t pgid) {
 		j->previous->next = j->next;
 	}
 
-	free_job(j); 
+	freeJob(j); 
 	size--; 
 	return 1;
 }
 
-job* findJob(pid_t pgid){
+job* findJob(job** firstJob, pid_t pgid){
 	job *head;
 
-	for(head = (job*) ((*firstJob)->next); head; head = head->next) {
+	for(head = (job*) (*firstJob); head; head = head->next) {
 		if(head->pgid == pgid) {
 			return head;
 		}
@@ -100,12 +97,13 @@ void freeProcess(process *head){
 //do i need to free termios variable?
 void freeJob(job* j){
 	if(j->first_process != NULL){
-		free_process(j->first_process);
+		freeProcess(j->first_process);
 	}
 
 	j->next = NULL; 
 	j->previous = NULL;
-	freeInfo(j->cmdInfo);
+	freeCmdType(j->command);
+	free(j->commandStr);
 	free(j->command);
 	free(j); 
 }
@@ -117,7 +115,7 @@ int isJobStopped(job *head){
 	process *temp; 
 
 	for(temp = (process*)head; temp; temp = temp->next)
-		if(temp->status == SUSPENDED && !temp->stopped)
+		if(temp->status == SUSPENDED)
 			return 0; 
 	return 1; 
 }
@@ -142,15 +140,15 @@ void setJobStatus(job *j, int status){
 }
 
 void setJobCompleted(job* j){
-	set_job_status(j, COMPLETED);
+	setJobStatus(j, COMPLETED);
 }
 
 void setJobSuspended(job* j){
-	set_job_status(j, SUSPENDED);
+	setJobStatus(j, SUSPENDED);
 }
 
 void setJobContinued(job* j){
-	set_job_status(j, FOREGROUND);
+	setJobStatus(j, FOREGROUND);
 }
 
 int getSize(void){
@@ -165,17 +163,17 @@ void printCommand(commandType *command){
 	
 	//need to reclarify this partd
 	if(command->numPipes == 0){// && command->commandType == NORMAL_CMD){
-		print_info(&(command->CmdArray[0]));
+		printInfo(&(command->CmdArray[0]));
 	}
 	else if(command->numPipes > 0){
 		for(i = 0; i < command->numPipes ;i++){
-			print_info(&(command->CmdArray[i]));
+			printInfo(&(command->CmdArray[i]));
 		}
 	}
 	if(command->isOutFile){
 		printf("%s <", command->outFile);
 	}
-	if(command->commandType == BACKGROUND_CMD){
+	if(command->commandType == BACKGROUND_INPUT){
 		printf(" &");
 	}
 }

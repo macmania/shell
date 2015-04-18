@@ -1,11 +1,11 @@
 #include "Shell.h"
-
-volatile job **firstJob;
+#include <stdio.h>
+#include <stdlib.h>
 
 int main (int argc, char** argv) {
 	init();
 	printPrompt();
-	firstJob = (volatile struct job**) malloc(sizeof(struct job));
+	firstJob = malloc(sizeof(job));
 	while(TRUE) {
 		char* cmdLine;
 		struct parseInfo* cmd;
@@ -20,7 +20,7 @@ int main (int argc, char** argv) {
 		}
 
 		cmd = parse(cmdLine);
-		parse_command(cmdLine, cmdType); //takes the command and saves them to cmdType
+		parseCommand(cmdLine, cmdType); //takes the command and saves them to cmdType
 		
 		if (isBltInCmd(cmd)){ //Limitations, built in commands cannot handle &, | or so 
 								//for now
@@ -28,9 +28,11 @@ int main (int argc, char** argv) {
 		}
 		else {
 			job* j = malloc(sizeof(job));
-			j = readyJob(cmd, cmdType, j);
+			j = readyJob(cmdLine, cmd, cmdType, j);
 			launchJob(j);
 		}
 	  }
+	  
+	
 	printf("\n");
 }

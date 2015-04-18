@@ -6,7 +6,6 @@
 #include <termios.h>
 #include "Parser.h"
 
-#define COMPLETED 0
 /** Single process **/
 typedef struct process {
 	struct process *next; 
@@ -32,24 +31,26 @@ typedef struct job {
 	int stdin, stdout, stderr; //why do i need this??
 	int indexJob;
 	commandType *command;
+	char* commandStr;
 }job; 
 
-void initProcess(void);
-job* findJob(pid_t); 
+void initProcess(process*);
+job* findJob(job**, pid_t); 
 int isJobStopped(job*);
 int isJobCompleted(job*);
-void addJob(job*); 
-int deleteJob(pid_t pgid); //returns 0 or 1 if job was successfully 
+int deleteJob(job**, job*); //returns 0 or 1 if job was successfully 
 						//deleted in the job pipeline and freed 
 					//successfully
-void* addJob(struct parseInfo*, int);
+void addJob(job**, job*);
 void deleteAllJobs(void); 
 int getSize(void);
 void freeProcess(process*);
 void freeJob(job*);
-void setCobCompleted(job*);
-
+void setJobCompleted(job*);
+void setJobSuspended(job*);
+void setJobContinued(job*);
+void addProcess(process*, process*, struct parseInfo*);
 //To-do
-process* getJob(void);
+//process* getJob(void);
 int terminateJob(pid_t);
-void printCommand(struct commandType*);
+void printCommand(commandType*);
