@@ -44,10 +44,20 @@
 	as mobile phones and/or arduinos.
 	
 ## Installation
-	Run make and type ./shell
+	Make sure autotools is installed in the system. If homebrew is installed, simply type the 
+	following:
+	
+	brew install autoconf
+	autoreconf -i
+	./configure
+	make
+	go to src and run ./shell
 	
 ## Tests
-	Must install check - a C unit testing framework
+	Must install check - a C unit testing framework. If check is not installed, if homebrew is 
+	installed, then simply brew install check
+	
+	after installing the project, simply run make check to run the tests.
 	
 ## Contributors
 	Jouella Fabe
