@@ -6,12 +6,25 @@
 #include "../src/Shell.h"
 #include <stdlib.h>
 #include <stdio.h>
-
-//job firstJob**; 
+#include <termios.h>
+#include <unistd.h>
+ 
 
 START_TEST(test_readyJob)
-{
-	ck_assert_int_eq(0, 0);
+{	
+	char cmdStr[] = "ls -l"; 
+	
+	struct parseInfo* firstCmd = malloc(sizeof(parseInfo));
+	
+	
+	commandType* cmd = malloc(sizeof(commandType));
+	
+	
+	job* j = readyJob(cmdStr, firstCmd, cmd, malloc(sizeof(job)));
+	
+	free(cmd); 
+	free(parseInfo);
+	
 }
 END_TEST
 
@@ -86,6 +99,17 @@ Suite* shell_suite(void){
 	tc_core = tcase_create("Core");
 	
 	tcase_add_test(tc_core, test_readyJob);
+	tcase_add_test(tc_core, test_launchJob);
+	tcase_add_test(tc_core, test_setJobBackground);
+	tcase_add_test(tc_core, test_setJobForeground);
+	tcase_add_test(tc_core, test_waitForJob);
+	tcase_add_test(tc_core, test_markJobAsRunning);
+	tcase_add_test(tc_core, test_continueJob );
+	tcase_add_test(tc_core, test_isBltInCmd);
+	tcase_add_test(tc_core, test_isCmdEmpty);
+	tcase_add_test(tc_core, test_killAllJobs);
+	tcase_add_test(tc_core, test_getJob);
+
 	suite_add_tcase(s, tc_core);
 	
 	return s;

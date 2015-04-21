@@ -14,12 +14,6 @@
 #include <signal.h>
 #include "Shell.h"
 
-
-static pid_t shell_pgid;
-static int shell_terminal, shell_interactive;
-static int sizeStoppedJobs;
-struct termios shell_tmodes;
-
 //initialize signal handlers
 //set up the shell as its own process group
 void init(void){
@@ -73,6 +67,9 @@ void init(void){
 //To-do, add to a list for future viewing 
 job* readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job* j){
 	//makes a new job and save all of these information 
+	if(j == NULL) 
+		return;
+		
 	struct parseInfo* tempPipes; 
 	
 	j->command = cmd;
@@ -91,7 +88,7 @@ job* readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job* j
 		
 		for(i = cmd->numPipes - 1;i > -1; i--){ 
 			process *add = malloc(sizeof(process));
-			addProcess(j->first_process, add, &cmd->CmdArray[i]);
+			addProcess(&(j->first_process), add, &cmd->CmdArray[i]);
 		}
 		
 		process* first = malloc(sizeof(process));
@@ -198,15 +195,11 @@ void setJobForeground(job* j, int doContinue){
 
 //waits for child to terminate
 void waitForJob(job* j){
-	int status;
-	while(waitpid(WAIT_ANY, &status, WUNTRACED | WNOHANG) > 0);
+	while(waitpid(WAIT_ANY, 0, WUNTRACED | WNOHANG) > 0);
 }
 
-void markJobAsRunning (job *j){
-  process *p;
- 
-  for (p = j->first_process; p; p = p->next)
-    p->status = FOREGROUND;
+void markJobAsRunning (job *j){ 
+  setJobStatus(j->first_process, FOREGROUND);
   j->notified = 0;
 }
 
@@ -218,6 +211,7 @@ void continueJob (job *j, int foreground) {
     setJobBackground (j, 1);
 }
 
+//net to put more information here
 void printPrompt(){
   printf("*** Welcome to Jojo's small scale shell\n\n ****");
 }
