@@ -199,8 +199,8 @@ void printInfo(struct parseInfo *info){
 }
 
 void freeInfo(struct parseInfo *info){
-	printf("freeing memory block"); 
-	int i; 
+  printf("freeing memory block"); 
+  int i; 
   for(i = 0; i < info->argVarNum; i++){
     free(info->ArgVarList[i]);
   }
@@ -209,6 +209,7 @@ void freeInfo(struct parseInfo *info){
 }
 
 void freeCmdType(commandType* cmd){
+	if(cmd == NULL) return;
 	int i; 
 	
 	for(i = 0; i < cmd->numPipes; i++)	

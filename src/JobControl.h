@@ -31,10 +31,11 @@ typedef struct job {
 	int stdin, stdout, stderr; //why do i need this??
 	int indexJob;
 	commandType *command;
-	char* commandStr;
+	char* commandStr; //might want to change this in the future to 
+					//to explicitly only contain an array of char. 
 }job; 
 
-void initProcess(process*);
+void initProcess(process**);
 job* findJob(job**, pid_t); 
 int isJobStopped(job*);
 int isJobCompleted(job*);
@@ -49,7 +50,7 @@ void freeJob(job*);
 void setJobCompleted(job*);
 void setJobSuspended(job*);
 void setJobContinued(job*);
-void addProcess(process*, process*, struct parseInfo*);
+void addProcess(process**, process*, struct parseInfo*);
 //To-do
 //process* getJob(void);
 int terminateJob(pid_t);

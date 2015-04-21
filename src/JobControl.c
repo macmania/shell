@@ -10,8 +10,8 @@
 volatile int size; //testing purpose
 
 
-void initProcess(process* p) {
-	p = malloc(sizeof(p)); 
+void initProcess(process** p) {
+	*p = malloc(sizeof(process)); 
 }
 
 //adds the first job 
@@ -35,8 +35,8 @@ void addJob(job** firstJob, job* newJob){
 	size++; 
 }
 
-void addProcess(process* head, process* p, struct parseInfo *cmd){
-	if(p == NULL || head == NULL) {
+void addProcess(process** head, process* p, struct parseInfo *cmd){
+	if(p == NULL) {
 		perror("Cannot add an empty process"); fflush(0); 
 		return;
 	}
@@ -45,14 +45,27 @@ void addProcess(process* head, process* p, struct parseInfo *cmd){
 	
 	if(head == NULL){
 		p->next = NULL;
-		head = (process*) head;
+		*head = (process*) p;
 	}
 	else{
-		p->next = head;
-		head = p; 
+		p->next = *head;
+		*head = p; 
 	}
 	
 }
+
+
+job* findJob(job** firstJob, pid_t pgid){
+	job *head;
+
+	for(head = (job*) (*firstJob); head; head = head->next) {
+		if(head->pgid == pgid) {
+			return head;
+		}
+	}
+	return NULL; 
+}
+
 
 int deleteJob(job** firstJob, job* j) {
 	if(j == NULL) 
@@ -71,17 +84,6 @@ int deleteJob(job** firstJob, job* j) {
 	freeJob(j); 
 	size--; 
 	return 1;
-}
-
-job* findJob(job** firstJob, pid_t pgid){
-	job *head;
-
-	for(head = (job*) (*firstJob); head; head = head->next) {
-		if(head->pgid == pgid) {
-			return head;
-		}
-	}
-	return NULL; 
 }
 
 //deletes all of the processes in the pipe-line
