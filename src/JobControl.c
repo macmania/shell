@@ -87,19 +87,20 @@ int deleteJob(job** firstJob, job* j) {
 }
 
 //deletes all of the processes in the pipe-line
-void freeProcess(process *head){
+void freeProcess(process **head){
 	struct process *tmp;
-	while(head != NULL){
-		tmp = head; 
-		head = head->next; 
+	while(*head != NULL){
+		tmp = *head; 
+		*head = (*head)->next; 
 		free(tmp); 
 	}
+	head = NULL; 
 }
 
 //do i need to free termios variable?
 void freeJob(job* j){
 	if(j->first_process != NULL){
-		freeProcess(j->first_process);
+		freeProcess(&(j)->first_process);
 	}
 
 	j->next = NULL; 
@@ -107,25 +108,18 @@ void freeJob(job* j){
 	freeCmdType(j->command);
 	free(j->commandStr);
 	free(j->command);
+	
 	free(j); 
 }
 
 
 
 /** utility functions that will be used to operate on job objects **/
-int isJobStopped(job *head){
+int isJobStatus(job *head, int status){
 	process *temp; 
 
-	for(temp = (process*)head; temp; temp = temp->next)
-		if(temp->status == SUSPENDED)
-			return 0; 
-	return 1; 
-}
-
-int isJobCompleted(job *head){
-	process *p; 
-	for(p = (process*)head->first_process; p; p = p->next)
-		if(p->status == BACKGROUND)
+	for(temp = (process*)head->first_process; temp; temp = temp->next)
+		if(temp->status == status)
 			return 0; 
 	return 1; 
 }
@@ -139,18 +133,6 @@ void setJobStatus(job *j, int status){
 	for(p = (process*)j->first_process; p; p = p->next){
 		p->status = status;
 	}
-}
-
-void setJobCompleted(job* j){
-	setJobStatus(j, COMPLETED);
-}
-
-void setJobSuspended(job* j){
-	setJobStatus(j, SUSPENDED);
-}
-
-void setJobContinued(job* j){
-	setJobStatus(j, FOREGROUND);
 }
 
 int getSize(void){
@@ -179,5 +161,3 @@ void printCommand(commandType *command){
 		printf(" &");
 	}
 }
-
-

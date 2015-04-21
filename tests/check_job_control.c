@@ -105,54 +105,71 @@ END_TEST
 
 START_TEST(test_freeProcess)
 {
-	process *p, *p1; 
+	process* p; 
+	process* p1; 
 	if(p == NULL || p1 == NULL) 
 		ck_abort_msg("p or p1 is null"); 
 	 
 	initProcess(&p);
-	initProcess(&p1); 
-	//addProcess(p, p1, NULL);
-	//ck_assert_ptr_eq(p, p1);
-	free(p); free(p1); 
+	initProcess(&p1);
+	ck_assert_ptr_ne(p, NULL); 
+	ck_assert_ptr_ne(p1, NULL); 
+	ck_assert_ptr_eq((*firstJob)->first_process, NULL); 
+	addProcess(&((*firstJob)->first_process), p1, NULL);
+	ck_assert_ptr_eq((*firstJob)->first_process, p1);
+	addProcess(&(*firstJob)->first_process, p, NULL); 
+	ck_assert_ptr_eq((*firstJob)->first_process, p);
 	 
+	freeProcess(&((*firstJob)->first_process)); 
+	ck_assert_ptr_ne((*firstJob)->first_process, p); 
 }
 END_TEST
 
-START_TEST(test_freeJob)
+
+START_TEST(test_isJobStatus)
 {
-
+	process *t1, *t2, *t3, *t4, *t5; 
+	t1 = malloc(sizeof(process)); 
+	t1->status = RUNNING;
+	
+	t2 = malloc(sizeof(process)); 
+	t2->status = RUNNING;
+	
+	t3 = malloc(sizeof(process));
+	t3->status = RUNNING;
+	
+	t4 = malloc(sizeof(process)); 
+	t4->status = SUSPENDED;
+	
+	t5 = malloc(sizeof(process)); 
+	t5->status = RUNNING;
+	
+	addProcess(&(*firstJob)->first_process, t3, NULL);
+	addProcess(&(*firstJob)->first_process, t2, NULL);
+	addProcess(&(*firstJob)->first_process, t1, NULL);
+	
+	ck_assert_ptr_eq((*firstJob)->first_process, t1); 
+	ck_assert_int_eq(isJobStopped(*firstJob), 1); 
+	
+	addProcess(&(*firstJob)->first_process, t4, NULL); 
+	ck_assert_ptr_eq((*firstJob)->first_process, t4);
+	
+	addProcess(&(*firstJob)->first_process, t5, NULL);
+	ck_assert_ptr_eq((*firstJob)->first_process, t5);
+	
+	ck_assert_int_eq(isJobStopped(*firstJob), 0);
+	
+	setJobCompleted(*firstJob); 
+	ck_assert_int_eq(isJobCompleted(*firstJob), 1);
+	 
+	setJobSuspended(*firstJob);
+	ck_assert_int_eq(isJobStopped(*firstJob), 0);
+	
+	freeProcess(&(*firstJob)->first_process); 
 }
 END_TEST
 
-START_TEST(test_isJobStopped)
-{
 
-}
-END_TEST
-
-START_TEST(test_isJobCompleted)
-{
-
-}
-END_TEST
-
-START_TEST(test_setJobCompleted)
-{
-
-}
-END_TEST
-
-START_TEST(test_setJobSuspended)
-{
-
-}
-END_TEST
-
-START_TEST(test_setJobContinued)
-{
-
-}
-END_TEST
 
 Suite* job_control_suite(void){
 	Suite* s; 
@@ -166,12 +183,7 @@ Suite* job_control_suite(void){
 	tcase_add_test(tc_core, test_addProcess);
 	tcase_add_test(tc_core, test_deleteJob);
 	tcase_add_test(tc_core, test_freeProcess);
-	tcase_add_test(tc_core, test_freeJob);
-	tcase_add_test(tc_core, test_isJobStopped);
-	tcase_add_test(tc_core, test_isJobCompleted);
-	tcase_add_test(tc_core, test_setJobCompleted);
-	tcase_add_test(tc_core, test_setJobSuspended);
-	tcase_add_test(tc_core, test_setJobContinued);
+	tcase_add_test(tc_core, test_isJobStatus);
 	
 	return s;
 }

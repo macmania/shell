@@ -6,6 +6,12 @@
 #include <termios.h>
 #include "Parser.h"
 
+#define setJobCompleted(j) setJobStatus(j, COMPLETED)
+#define setJobSuspended(j) setJobStatus(j, SUSPENDED)
+#define setJobContinued(j) setJobStatus(j, FOREGROUND)
+
+#define isJobStopped(j) (isJobStatus(j, SUSPENDED))
+#define isJobCompleted(j) (isJobStatus(j, BACKGROUND))
 /** Single process **/
 typedef struct process {
 	struct process *next; 
@@ -14,11 +20,6 @@ typedef struct process {
 	struct parseInfo* cmdInfo;
 }process; 
 
-/* pipeline of processes */
-/* might want to use a hash-table for keeping a list of 
-   jobs, easier access
-	To-do. 
-***/
 /* these contains each of the commands that need to be processed" **/
 typedef struct job {
 	struct job *next; 
@@ -35,23 +36,16 @@ typedef struct job {
 					//to explicitly only contain an array of char. 
 }job; 
 
+
 void initProcess(process**);
-job* findJob(job**, pid_t); 
-int isJobStopped(job*);
-int isJobCompleted(job*);
-int deleteJob(job**, job*); //returns 0 or 1 if job was successfully 
-						//deleted in the job pipeline and freed 
-					//successfully
+job* findJob(job**, pid_t);
+int  isJobStatus(job*, int);
+void setJobStatus(job*, int);
+int  deleteJob(job**, job*);
 void addJob(job**, job*);
 void deleteAllJobs(void); 
-int getSize(void);
-void freeProcess(process*);
+int  getSize(void);
+void freeProcess(process**);
 void freeJob(job*);
-void setJobCompleted(job*);
-void setJobSuspended(job*);
-void setJobContinued(job*);
 void addProcess(process**, process*, struct parseInfo*);
-//To-do
-//process* getJob(void);
-int terminateJob(pid_t);
 void printCommand(commandType*);
