@@ -7,13 +7,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-job firstJob**; 
+//job firstJob**; 
 
 START_TEST(test_readyJob)
 {
-	
 	ck_assert_int_eq(0, 0);
-	printf("Hello");
 }
 END_TEST
 
@@ -110,7 +108,7 @@ int main(void)
 
 	//killAllJobs();
 
-	free(job);
+	free(*firstJob);
 	return (numberFailed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 	
 }

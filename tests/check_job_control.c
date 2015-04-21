@@ -105,7 +105,16 @@ END_TEST
 
 START_TEST(test_freeProcess)
 {
-	
+	process *p, *p1; 
+	if(p == NULL || p1 == NULL) 
+		ck_abort_msg("p or p1 is null"); 
+	 
+	initProcess(&p);
+	initProcess(&p1); 
+	//addProcess(p, p1, NULL);
+	//ck_assert_ptr_eq(p, p1);
+	free(p); free(p1); 
+	 
 }
 END_TEST
 
