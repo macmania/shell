@@ -65,7 +65,7 @@ void init(void){
 }
 
 //To-do, add to a list for future viewing 
-job* readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job** j){
+void readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job** j){
 	//makes a new job and save all of these information 
 	if(*j == NULL) 
 		return;
@@ -80,7 +80,7 @@ job* readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job** 
 	
 	if(cmd->numPipes == 0){ 
 		(*j)->first_process->cmdInfo = firstCmd;
-		return j;
+		//return j;
 	}
 	else{ //assign each command its own process
 		int i; 
@@ -94,8 +94,7 @@ job* readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job** 
 		process* first = malloc(sizeof(process));
 		addProcess((*j)->first_process, first, firstCmd);
 	}
-	
-	return j;
+	//return j;
 }
 
 //passes this job and add to the job list

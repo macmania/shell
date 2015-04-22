@@ -28,11 +28,37 @@ START_TEST(test_readyJob)
 	readyJob(cmdStr, firstCmd, cmd, &j); 
 	
 	ck_assert_ptr_ne(j->first_process, NULL); //pointer should be allocated
-	//ck_assert_ptr_eq(j->first_process->cmdInfo, firstCmd);
-//	
-//	free(cmd); 
-//	free(firstCmd);
+	ck_assert_ptr_eq(j->first_process->cmdInfo, firstCmd);
 	
+	//Simulating piping commands 
+	cmd->numPipes = 3; //ls -l | grep -x "Apr" | ls -l
+	
+	cmd->CmdArray[0].command = "ls"; 
+	strcpy(cmd->CmdArray[0].ArgVarList,"-l");
+	cmd->CmdArray[0].argVarNum = 1;
+
+	cmd->CmdArray[1].command = "grep";
+	strcpy(cmd->CmdArray[1].ArgVarList, "-x");
+	cmd->CmdArray[1].argVarNum = 1;
+	
+	cmd->CmdArray[2].command = "ls";
+	strcpy(cmd->CmdArray[2].ArgVarList, "-l");
+	cmd->CmdArray[2].argVarNum = 1;
+	
+	readyJob(cmdStr, firstCmd, cmd, &j);
+	
+	ck_assert_int_eq(j->command->numPipes, 3);
+	
+	int i;
+	
+	
+	//for(i = 0; i )
+	
+	//freeCmdType(cmd);
+	free(cmd);
+	//freeInfo(firstCmd);
+	free(firstCmd);
+	free(j);
 }
 END_TEST
 
@@ -140,7 +166,7 @@ int main(void)
 
 	//killAllJobs();
 
-	free(*firstJob);
+	//free(*firstJob);
 	return (numberFailed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 	
 }

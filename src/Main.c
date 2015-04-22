@@ -28,7 +28,7 @@ int main (int argc, char** argv) {
 		}
 		else {
 			job* j = malloc(sizeof(job));
-			j = readyJob(cmdLine, cmd, cmdType, j);
+			readyJob(cmdLine, cmd, cmdType, &j);
 			launchJob(j);
 		}
 	  }
