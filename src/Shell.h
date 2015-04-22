@@ -40,7 +40,7 @@ void execBltInCmd(struct parseInfo*);
 void launchProcess(job*);
 job* getJob(pid_t, int);
 void launchJob(job*);
-job* readyJob(char*, struct parseInfo*, commandType*, job*);
+job* readyJob(char*, struct parseInfo*, commandType*, job**);
 int isBackgroundJob(job*); //goes through a linked list to see if the command is paused
 
 void setJobForeground(job*, int);

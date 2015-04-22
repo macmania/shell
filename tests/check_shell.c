@@ -14,16 +14,24 @@ START_TEST(test_readyJob)
 {	
 	char cmdStr[] = "ls -l"; 
 	
-	struct parseInfo* firstCmd = malloc(sizeof(parseInfo));
-	
+	struct parseInfo* firstCmd = malloc(sizeof(struct parseInfo));
+	firstCmd->command = "ls"; 
+	strcpy(firstCmd->ArgVarList, "-l");
+	firstCmd->argVarNum = 1;
 	
 	commandType* cmd = malloc(sizeof(commandType));
+	cmd->isInFile = FALSE;
+	cmd->numPipes = 0; 
+	job* j = malloc(sizeof(job));
 	
+	ck_assert_ptr_ne(j, NULL);
+	readyJob(cmdStr, firstCmd, cmd, &j); 
 	
-	job* j = readyJob(cmdStr, firstCmd, cmd, malloc(sizeof(job)));
-	
-	free(cmd); 
-	free(parseInfo);
+	ck_assert_ptr_ne(j->first_process, NULL); //pointer should be allocated
+	//ck_assert_ptr_eq(j->first_process->cmdInfo, firstCmd);
+//	
+//	free(cmd); 
+//	free(firstCmd);
 	
 }
 END_TEST
@@ -124,7 +132,7 @@ int main(void)
 	
 	s = shell_suite(); 
 	sr = srunner_create(s); 
-	
+	srunner_set_fork_status(sr, CK_NOFORK);
 	srunner_run_all(sr, CK_NORMAL);
 	numberFailed = srunner_ntests_failed(sr);
 	srunner_free(sr);
