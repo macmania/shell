@@ -88,11 +88,13 @@ void readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job** 
 		
 		for(i = cmd->numPipes - 1;i > -1; i--){ 
 			process *add = malloc(sizeof(process));
-			addProcess(&((*j)->first_process), add, &cmd->CmdArray[i]);
+			printInfo(&(cmd->CmdArray[i]));
+			add->cmdInfo = cmd->CmdArray[i];
+			addProcess(&((*j)->first_process), add, &(cmd->CmdArray[i]));
 		}
 		
 		process* first = malloc(sizeof(process));
-		addProcess((*j)->first_process, first, firstCmd);
+		addProcess(&((*j)->first_process), first, firstCmd);
 	}
 	//return j;
 }

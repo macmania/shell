@@ -41,7 +41,7 @@ void addProcess(process** head, process* p, struct parseInfo *cmd){
 		return;
 	}
 	
-	p->cmdInfo = cmd;
+	//p->cmdInfo = cmd;
 	
 	if(head == NULL){
 		p->next = NULL;
