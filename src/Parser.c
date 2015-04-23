@@ -6,114 +6,120 @@
 #include <sys/stat.h>
 #include <ctype.h> 
 
-void initInfo(struct parseInfo *p){
+void initProcess(process* p){
+  //p = malloc(sizeof(process));
   p->command = malloc(sizeof(char)); 
   p->argVarNum = 0;
 }
 
 //parses each of the tokens given the command
 //still need to test with all of the base cases
-void parseCommand(char *command, commandType *comm){
-  if(comm == NULL) printf("Error, command type pointer not initialized");
-	
-  char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok;
-  char tempCmdTok[strlen(command)+1];
-  int lenCommandStr=strlen(command)+1, locCmdType;
-  char commandArrCopy[lenCommandStr];
-  char cmdType; 
+void parseCommand(char *command, job *j){
+    if(j == NULL){
+  	  printf("Error, command type pointer not initialized");
+  	  return;
+    }
+  	
+    char *cmdTok, *delimeters, *cpyPtr, *prevTempCmdTok;
+    char tempCmdTok[strlen(command)+1];
+    int lenCommandStr=strlen(command)+1, locCmdType;
+    char commandArrCopy[lenCommandStr];
+    char cmdType; 
 
-  delimeters = "&><|";
-  strncpy(commandArrCopy, command, lenCommandStr);
-  commandArrCopy[strlen(command)+1] = '\0';
-  cpyPtr = strdup(commandArrCopy);
-  cmdTok = strtok(commandArrCopy, delimeters);
+    delimeters = "&><|";
+    strncpy(commandArrCopy, command, lenCommandStr);
+    commandArrCopy[strlen(command)+1] = '\0';
+    cpyPtr = strdup(commandArrCopy);
+    cmdTok = strtok(commandArrCopy, delimeters);
 
-  //Sample command: 
-  /***** input < echo > output **/
-  /**** --- To-do: need to improve the variable names --- ***/
-  while(cmdTok){
-    locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
-    cmdType = cpyPtr[locCmdType];
+    //Sample command: 
+    /***** input < echo > output **/
+    /**** --- To-do: need to improve the variable names --- ***/
+    while(cmdTok){
+      locCmdType = cmdTok - commandArrCopy + strlen(cmdTok);
+      cmdType = cpyPtr[locCmdType];
 
-    
-    switch(cmdType) { 
-    	 case DIRECT_IN: //redirect input file to the next command
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); 
-        tempCmdTok[strlen(cmdTok)] = '\0';
-        prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
+      switch(cmdType) { 
+    	  case DIRECT_IN: //redirect input file to the next command
+          strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); 
+          tempCmdTok[strlen(cmdTok)] = '\0';
+          prevTempCmdTok = trimWhiteSpaces(tempCmdTok); 
 
-        
-        if(!isProperFile(prevTempCmdTok)){
-          printError(UNKNOWN_CMD); //may need to raise some sort of error or so
-          return;
-        }
-        
-        if(!isFile(prevTempCmdTok)){
-          printError(FILE_NAME_NOT_FOUND);
-          return;
-        }
+          
+          if(!isProperFile(prevTempCmdTok)){
+            printError(UNKNOWN_CMD); //may need to raise some sort of error or so
+            return;
+          }
+          
+          if(!isFile(prevTempCmdTok)){
+            printError(FILE_NAME_NOT_FOUND);
+            return;
+          }
 
-        strncpy(comm->inFile, prevTempCmdTok, strlen(prevTempCmdTok));
-        comm->isInFile=1;
-        break; 
+          strncpy(j->inFile, prevTempCmdTok, strlen(prevTempCmdTok));
+          j->isInFile = 1; //temporary
+          break; 
 
-      case DIRECT_OUT: //redirect output to specified file, signals the end of the command
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added +1
-        
-        cmdTok = strtok(NULL, delimeters);
-        if(!cmdTok){
-          printError(NO_FILE_ENTERED);
-          return;
-        }
-        strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added+ 1
-        tempCmdTok[strlen(cmdTok)] = '\0';
-        prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
+        case DIRECT_OUT: //redirect output to specified file, signals the end of the command
+          strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added +1
+          
+          cmdTok = strtok(NULL, delimeters);
+          if(!cmdTok){
+            printError(NO_FILE_ENTERED);
+            return;
+          }
+          strncpy(tempCmdTok, &cpyPtr[cmdTok-commandArrCopy], strlen(cmdTok)+1); //---such as this---, added+ 1
+          tempCmdTok[strlen(cmdTok)] = '\0';
+          prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
 
-        if(!isProperFile(prevTempCmdTok)){
-          printError(UNKNOWN_CMD);
-          return;
-        }
+          if(!isProperFile(prevTempCmdTok)){
+            printError(UNKNOWN_CMD);
+            return;
+          }
 
-        comm->isOutFile=1;
-        strncpy(comm->outFile, prevTempCmdTok, strlen(prevTempCmdTok));
-        break;
+          j->isOutFile=1;
+          strncpy(j->outFile, prevTempCmdTok, strlen(prevTempCmdTok));
+          break;
 
-      case PIPE: //need more information here or guidance at the very the least
-        //call an outside function here to set up comm->CmdArray that will save 
-        cmdTok = strtok(NULL, delimeters);
-        strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
-        tempCmdTok[strlen(cmdTok)] = '\0';
-        if(tempCmdTok == NULL){
-          //may need to change some stuff or so 
-          printError(UNKNOWN_CMD);
-          return;
-        }
-        prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
-        comm->CmdArray[comm->numPipes] = *parse(prevTempCmdTok);
-        comm->numPipes++;
+        case PIPE: //need more information here or guidance at the very the least
+          //call an outside function here to set up comm->CmdArray that will save 
+          cmdTok = strtok(NULL, delimeters);
+          strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
+          tempCmdTok[strlen(cmdTok)] = '\0';
+          if(tempCmdTok == NULL){
+            //may need to change some stuff or so 
+            printError(UNKNOWN_CMD);
+            return;
+          }
+          prevTempCmdTok = trimWhiteSpaces(tempCmdTok);
+         /** j->CmdArray[comm->numPipes]**/ 
+          process* p = malloc(sizeof(process));
+          parse(&p, prevTempCmdTok);
+          addProcessEnd(&(j->first_process), p); 
+          j->numPipes++;
 
-        break;
+          break;
 
-      case BACKGROUND_INPUT:
-        comm->status = BACKGROUND;
-        break;
+        case BACKGROUND_INPUT:
+          j->status = BACKGROUND;
+          break;
+      }
+
+      cmdTok = strtok(NULL, delimeters);
+      memset(&tempCmdTok[0], 0, strlen(tempCmdTok));
     }
 
-    cmdTok = strtok(NULL, delimeters);
-    memset(&tempCmdTok[0], 0, strlen(tempCmdTok));
+    cpyPtr = trimWhiteSpaces(cpyPtr); //time-consuming 
+    if(cpyPtr[strlen(cpyPtr)-1] == BACKGROUND_INPUT){
+      j->status = FOREGROUND;
+    }
+    if(j->commandType != '\0') 
+        j->commandType = cmdType;
+    else{
+    	  j->commandType = NORMAL_CMD;
+    } 
+  	  
   }
-
-  cpyPtr = trimWhiteSpaces(cpyPtr); //time-consuming 
-  if(cpyPtr[strlen(cpyPtr)-1] == BACKGROUND_INPUT){
-    comm->status = FOREGROUND;
-  }
-  if(comm->commandType != '\0') 
-	  comm->commandType = cmdType;
-  else{
-	  comm->commandType = NORMAL_CMD;
-  } 
-	  
-}
 
 char* trimWhiteSpaces(char* str){
   char* end; 
@@ -130,20 +136,23 @@ char* trimWhiteSpaces(char* str){
   return str; 
 }
 
-//To-do, make this more succint, removed useless fields
-struct parseInfo* parse (char* cmdLine){
+void parse(process** p, char* cmdLine){
   char *tokCmds; 
   char tmpCmd[strlen(cmdLine)+1]; 
 
-  struct parseInfo* result; 
-  result = malloc(sizeof(struct parseInfo));  
+  //resultProcess; 
+  
+  // p = malloc(sizeof(process*));  
+  // if (p == NULL) return;
+  // *p = malloc(sizeof(process)); 
+  // if(p == NULL) return;
   strcpy(tmpCmd, cmdLine);
   tmpCmd[strlen(cmdLine)] = '\0';
-  initInfo(result); 
+  initProcess(*p); 
 
-  if(result == NULL){
+  if(p == NULL){
     fprintf(stderr, "cannot initialize memory block"); 
-    return NULL; 
+   // return NULL; 
   }
 
 
@@ -151,69 +160,54 @@ struct parseInfo* parse (char* cmdLine){
 
   for(; tmpCmd[next] != ' '; next++);
   
-  memcpy(result->command, &tmpCmd[past], next-past);
+  memcpy((*p)->command, &tmpCmd[past], next-past);
  
-  if(isFile(result->command)){ //this still needs to be tested much further
+  if(isFile((*p)->command)){ //this still needs to be tested much further
 	  past = next;
 	  sleep(1);
 	  for(; tmpCmd[next] != ' ' && tmpCmd[next] != DIRECT_IN; next++);
   }
   else{
-	  result->ArgVarList[i] = malloc(sizeof(char)); 
-	  memcpy(result->ArgVarList[i], result->command, next-past); 
+	  //addProcess(p)
+	  (*p)->ArgVarList[i] = malloc(sizeof(char)); 
+	  memcpy((*p)->ArgVarList[i], (*p)->command, next-past); 
 	  i++;
 	  past = next;
 	  next++;
 	 
 	  for(; next < strlen(cmdLine); next++){
 		if(tmpCmd[next] == ' '){
-		  result->ArgVarList[i] = malloc(sizeof(char));
-		  memcpy(result->ArgVarList[i], &tmpCmd[past], next-past);
-		  past = next; 
-		  i++;
+			(*p)->ArgVarList[i] = malloc(sizeof(char));
+			memcpy((*p)->ArgVarList[i], &tmpCmd[past], next-past);
+			past = next; 
+			i++;
 		} 
 	  }
 	
 	  if(past != next){
-		result->ArgVarList[i] = malloc(sizeof(char));
-		memcpy(result->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
-		i++;
+		  (*p)->ArgVarList[i] = malloc(sizeof(char));
+		  memcpy((*p)->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
+		  i++;
 	  }
-	  result->ArgVarList[i] = NULL;
-	  result->argVarNum = i;
+	  (*p)->ArgVarList[i] = NULL;
+	  (*p)->argVarNum = i;
   }
-  return result; 
+  //return result; 
 }
 
-void printInfo(struct parseInfo *info){
-	if(info == NULL) {
+//Prints each process' command
+void printProcess(struct process *p){
+  if(p == NULL) {
     return;
   }
 
-  printf("command: %s ", info->command); 
+  printf("command: %s ", p->command); 
 
+  process* temp;
   int i; 
-  for(i = 0; i < info->argVarNum; i++){
-    printf("%s ", info->ArgVarList[i]); 
+  for(i = 0; i < p->argVarNum; i++){
+    printf("%s ", p->ArgVarList[i]); 
   }
-}
-
-void freeInfo(struct parseInfo *info){
-  printf("freeing memory block"); 
-  int i; 
-  for(i = 0; i < info->argVarNum; i++){
-    free(info->ArgVarList[i]);
-  }
-  free(info); 
-
-}
-
-void freeCmdType(commandType* cmd){
-	if(cmd == NULL) return;
-	int i; 
-	
-	for(i = 0; i < cmd->numPipes; i++)	
-		freeInfo(&(cmd->CmdArray[i]));
 }
 
 int isFile(char* fileName){

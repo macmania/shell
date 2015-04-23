@@ -64,41 +64,6 @@ void init(void){
 	}
 }
 
-//To-do, add to a list for future viewing 
-void readyJob(char* cmdStr, struct parseInfo* firstCmd, commandType* cmd, job** j){
-	//makes a new job and save all of these information 
-	if(*j == NULL) 
-		return;
-		
-	struct parseInfo* tempPipes; 
-	
-	(*j)->command = cmd;
-	(*j)->commandStr = malloc(sizeof(char));
-	(*j)->first_process = malloc(sizeof(process));
-	
-	strcpy((*j)->commandStr, cmdStr);
-	
-	if(cmd->numPipes == 0){ 
-		(*j)->first_process->cmdInfo = firstCmd;
-		//return j;
-	}
-	else{ //assign each command its own process
-		int i; 
-		//struct parseInfo cmdInfo[] = cmd->CmdArray;
-		
-		for(i = cmd->numPipes - 1;i > -1; i--){ 
-			process *add = malloc(sizeof(process));
-			printInfo(&(cmd->CmdArray[i]));
-			add->cmdInfo = cmd->CmdArray[i];
-			addProcess(&((*j)->first_process), add, &(cmd->CmdArray[i]));
-		}
-		
-		process* first = malloc(sizeof(process));
-		addProcess(&((*j)->first_process), first, firstCmd);
-	}
-	//return j;
-}
-
 //passes this job and add to the job list
 void launchJob(job* j) {
 	int childPid, pPid;
@@ -120,7 +85,7 @@ void launchJob(job* j) {
 			signal(SIGINT, SIG_DFL);
 			signal(SIGCONT, SIG_DFL);
 			sigaction(SIGCHLD, &sa, NULL); 
-			execvp(p->cmdInfo->command, p->cmdInfo->ArgVarList);
+			execvp(p->command, p->ArgVarList);
 		} else {
 		  j->pgid = getpid();
 		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
@@ -130,7 +95,6 @@ void launchJob(job* j) {
 	}
 	addJob(firstJob, j);
 }
-
 
 /*Signal Handlers**/
 void sigChldHandler(int sig, siginfo_t *si, void *context){
@@ -200,7 +164,7 @@ void waitForJob(job* j){
 }
 
 void markJobAsRunning (job *j){ 
-  setJobStatus(j->first_process, FOREGROUND);
+  setJobStatus(j, FOREGROUND);
   j->notified = 0;
 }
 
@@ -253,7 +217,7 @@ char* readCmdLine(void){
 }
 
 //To-do, change the parameter type
-void execBltInCmd(struct parseInfo* cmd) {
+void execBltInCmd(process* cmd) {
   char* command = cmd->command;
   char** arg = cmd->ArgVarList;
   int argNum = cmd->argVarNum;
@@ -345,7 +309,7 @@ void execBltInCmd(struct parseInfo* cmd) {
 }
 
 //temporary, only built in command is exit for now
-int isBltInCmd(struct parseInfo* cmd){
+int isBltInCmd(process* cmd){
   char* command = cmd->command;
   if(strcmp(command, "exit") == 0 || strcmp(command, "jobs") == 0 ||
        strcmp(command, "cd") == 0 || strcmp(command, "kill") == 0 ||

@@ -1,6 +1,6 @@
 //#ifndef Shell_h
 //#define Shell_h
-#include "JobControl.h"
+#include "Parser.h"
 #include <signal.h> 
 
 #define TRUE 1
@@ -35,12 +35,12 @@ void sigHandlers(int, siginfo_t*, void*);
 /* Helper methods **/
 void printPrompt();
 char* readCmdLine();
-int isBltInCmd(struct parseInfo*);
-void execBltInCmd(struct parseInfo*);
+int isBltInCmd(process*);
+void execBltInCmd(process*);
 void launchProcess(job*);
 job* getJob(pid_t, int);
 void launchJob(job*);
-void readyJob(char*, struct parseInfo*, commandType*, job**);
+void readyJob(char*, job**);
 int isBackgroundJob(job*); //goes through a linked list to see if the command is paused
 
 void setJobForeground(job*, int);
