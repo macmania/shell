@@ -35,12 +35,12 @@ void init(void){
 	    signal(SIGINT, SIG_IGN);
 	    signal(SIGCONT, SIG_IGN);
 
-		struct sigaction sa;
+		//struct sigaction sa;
 		struct sigaction saChld;
 
-		sa.sa_sigaction = &sigHandlers;
-		sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
-		sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
+		//sa.sa_sigaction = &sigHandlers;
+		//sigemptyset(&sa.sa_mask);  /* Block other terminal-generated signals while handler runs. */
+		//sa.sa_flags = SA_RESTART; /* restart function if interrupted by handler */
 
 		saChld.sa_sigaction = &sigChldHandler;
 		sigemptyset(&saChld.sa_mask);
@@ -95,6 +95,7 @@ void launchJob(job* j) {
 	}
 	addJob(firstJob, j);
 }
+
 
 /*Signal Handlers**/
 void sigChldHandler(int sig, siginfo_t *si, void *context){
@@ -206,6 +207,8 @@ char* readCmdLine(void){
         linep = lineNew;
       }
 
+      if(c == '\n') break;
+      
       if((*line++ = c) == '\n'){
         break;
       }

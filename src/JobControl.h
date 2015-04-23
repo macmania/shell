@@ -60,10 +60,7 @@ typedef struct job {
 	struct termios tmodes; 
 	int stdin, stdout, stderr; //why do i need this??
 	int indexJob;
-//	commandType *command;
-	char* commandStr; //might want to change this in the future to 
-					//to explicitly only contain an array of char. 
-					
+	char* commandStr; 
 	int status; 
 	char commandType;
 	int numPipes;

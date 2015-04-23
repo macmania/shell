@@ -18,6 +18,7 @@ enum
 Error_Messages {LESS_NUM_ARGS=0, MORE_NUM_ARGS, NEED_NUMERIC_ARG, FILE_NAME_INCOR};
 
 job **firstJob;
+
 static pid_t shell_pgid;
 static int shell_terminal, shell_interactive;
 static int sizeStoppedJobs;

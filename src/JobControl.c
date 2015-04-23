@@ -27,28 +27,13 @@ void addJob(job** firstJob, job* newJob){
 	size++; 
 }
 
-void addProcess(process** head, process* p){//, struct parseInfo *cmd){
-	if(p == NULL) {
-		perror("Cannot add an empty process"); fflush(0); 
-		return;
-	}
-	
-	//p->cmdInfo = cmd;
-	
-	if(head == NULL){
-		p->next = NULL;
-		*head = (process*) p;
-	}
-	else{
-		p->next = *head;
-		*head = p; 
-	}
-	
-}
 
 void addProcessEnd(process** head, process *newProcess){
+	if(newProcess == NULL) return;
+	
 	if(*head == NULL){
-		addProcess(head, newProcess);
+		newProcess->next = NULL;
+		*head = (process*) newProcess;
 		return;
 	}
 	else{

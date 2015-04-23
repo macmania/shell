@@ -5,7 +5,8 @@
 int main (int argc, char** argv) {
 	init();
 	printPrompt();
-	firstJob = malloc(sizeof(job));
+	firstJob = malloc(sizeof(job*));
+	*firstJob = malloc(sizeof(job)); 
 	while(TRUE) {
 		char* cmdLine;
 		job* j = malloc(sizeof(job));
@@ -20,8 +21,10 @@ int main (int argc, char** argv) {
 		//cmd = parse(cmdLine);
 		parseCommand(cmdLine, j); //takes the command and saves them to cmdType
 		
-		if(j->first_process == NULL)
+		if(j->first_process == NULL){
+			j->first_process = malloc(sizeof(process)); 
 			parse(&(j->first_process), cmdLine);
+		}
 		
 		
 		if(j->first_process != NULL && isBltInCmd(j->first_process)){ 
