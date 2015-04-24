@@ -73,19 +73,37 @@ void launchJob(job* j) {
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
 	
-	process* p = j->first_process;
+	process* p;// = j->first_process;
 	
 	for(p = j->first_process; p; p = p->next){
 		childPid = fork();
+
+    signal(SIGTSTP, SIG_DFL);
+    signal(SIGTTIN, SIG_DFL);
+    signal(SIGTTOU, SIG_DFL);
+    signal(SIGSTOP, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
+    signal(SIGCONT, SIG_DFL);
+    sigaction(SIGCHLD, &sa, NULL); 
+
+
 		if(childPid == 0) { //still need to work on how to redirect piping
-			signal(SIGTSTP, SIG_DFL);
-			signal(SIGTTIN, SIG_DFL);
-			signal(SIGTTOU, SIG_DFL);
-			signal(SIGSTOP, SIG_DFL);
-			signal(SIGINT, SIG_DFL);
-			signal(SIGCONT, SIG_DFL);
-			sigaction(SIGCHLD, &sa, NULL); 
-			execvp(p->command, p->ArgVarList);
+			
+			setpgrp(); 
+
+      /** Temporary fix **/
+      char* temp[p->argVarNum+1]; 
+      int i; 
+      for(i = 0; i < p->argVarNum+1; i++)
+        temp[i] = p->ArgVarList[i]; 
+      temp[p->argVarNum] = NULL;
+      
+      p->pid = getpid(); 
+      //execvp(p->command, temp);
+      execvp(p->command, p->ArgVarList);
+      
+
+      exit(EXIT_SUCCESS); 
 		} else {
 		  j->pgid = getpid();
 		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
@@ -93,7 +111,7 @@ void launchJob(job* j) {
 			  printf("signal interrupt delivered to calling process");
 		}
 	}
-	addJob(firstJob, j);
+	
 }
 
 
@@ -102,12 +120,13 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 	pid_t pid;
 	int status;
 
-	pid = waitpid(WAIT_ANY, &status, WUNTRACED | WNOHANG);
+	pid = waitpid(WAIT_ANY, &status, /** WUNTRACED |**/ WNOHANG);
 
 	if(pid > 0){ //handle the
 		job *j = getJob(pid, BY_PROCESS_ID);
 		if(j == NULL){
-			printf("Job is null inside sig child handler\n"); //temporary debug print info
+      (*firstJob)->first_process->pid = pid; 
+			//printf("Job is null inside sig child handler\n"); //temporary debug print info
 			return;
 		}
 		else if(WIFEXITED(status)){ //
@@ -207,14 +226,15 @@ char* readCmdLine(void){
         linep = lineNew;
       }
 
-      if(c == '\n') break;
-      
+      if(c == '\n')
+        break;
+
       if((*line++ = c) == '\n'){
         break;
       }
     }
 
-    //*line = '\0';
+    *line = '\0';
     return linep;
   }
 }
@@ -373,6 +393,6 @@ job* getJob(pid_t pid, int searchCriteria){
 				return head;
 		}
 	}
-	perror("unable to find job"); fflush(0);
+	//perror("unable to find job"); fflush(0);
 	return NULL;
 }

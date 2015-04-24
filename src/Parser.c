@@ -81,6 +81,7 @@ void parseCommand(char *command, job *j){
           strncpy(j->outFile, prevTempCmdTok, strlen(prevTempCmdTok));
           break;
 
+        
         case PIPE: //need more information here or guidance at the very the least
           //call an outside function here to set up comm->CmdArray that will save 
           cmdTok = strtok(NULL, delimeters);
@@ -140,14 +141,8 @@ void parse(process** p, char* cmdLine){
   char *tokCmds; 
   char tmpCmd[strlen(cmdLine)+1]; 
 
-  //resultProcess; 
-  
-  // p = malloc(sizeof(process*));  
-  // if (p == NULL) return;
-  // *p = malloc(sizeof(process)); 
-  // if(p == NULL) return;
-  strcpy(tmpCmd, cmdLine);
-  tmpCmd[strlen(cmdLine)] = '\0';
+  strncpy(tmpCmd, cmdLine, strlen(cmdLine) +1);
+  tmpCmd[strlen(cmdLine) + 1] = '\0';
   initProcess(*p); 
 
   if(p == NULL){
@@ -158,7 +153,7 @@ void parse(process** p, char* cmdLine){
 
   int next = 0, past = 0, i=0; 
 
-  for(; tmpCmd[next] != ' '; next++);
+  for(; tmpCmd[next] != ' ' && tmpCmd[next] != '\0' && next < (strlen(cmdLine)+1); next++);
   
   memcpy((*p)->command, &tmpCmd[past], next-past);
  
@@ -176,12 +171,12 @@ void parse(process** p, char* cmdLine){
 	  next++;
 	 
 	  for(; next < strlen(cmdLine); next++){
-		if(tmpCmd[next] == ' '){
-			(*p)->ArgVarList[i] = malloc(sizeof(char));
-			memcpy((*p)->ArgVarList[i], &tmpCmd[past], next-past);
-			past = next; 
-			i++;
-		} 
+  		if(tmpCmd[next] == ' '){
+  			(*p)->ArgVarList[i] = malloc(sizeof(char));
+  			memcpy((*p)->ArgVarList[i], &tmpCmd[past], next-past);
+  			past = next; 
+  			i++;
+  		} 
 	  }
 	
 	  if(past != next){

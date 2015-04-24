@@ -31,7 +31,8 @@ int main (int argc, char** argv) {
 		  	execBltInCmd(j->first_process); //stop, etc.
 		}
 		else {
-			launchJob(j);
+			addJob(firstJob, j);
+			launchJob(*firstJob);
 		}
 	  }
 	  
