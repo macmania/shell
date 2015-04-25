@@ -10,6 +10,7 @@ void initProcess(process* p){
   //p = malloc(sizeof(process));
   p->command = malloc(sizeof(char)); 
   p->argVarNum = 0;
+  p->next = NULL; 
 }
 
 //parses each of the tokens given the command
@@ -87,7 +88,7 @@ void parseCommand(char *command, job *j){
           cmdTok = strtok(NULL, delimeters);
           strncpy(tempCmdTok, &cpyPtr[cmdTok - commandArrCopy], strlen(cmdTok)+1); 
           tempCmdTok[strlen(cmdTok)] = '\0';
-          if(tempCmdTok == NULL){
+          if(tempCmdTok){
             //may need to change some stuff or so 
             printError(UNKNOWN_CMD);
             return;
@@ -153,7 +154,7 @@ void parse(process** p, char* cmdLine){
 
   int next = 0, past = 0, i=0; 
 
-  for(; tmpCmd[next] != ' ' && tmpCmd[next] != '\0' && next < (strlen(cmdLine)+1); next++);
+  for(; tmpCmd[next] != ' ' && tmpCmd[next] != '\0' && next < (strlen(cmdLine)); next++);
   
   memcpy((*p)->command, &tmpCmd[past], next-past);
  
@@ -179,7 +180,7 @@ void parse(process** p, char* cmdLine){
   		} 
 	  }
 	
-	  if(past != next){
+	  if(past != next && tmpCmd[past] != '\0'){
 		  (*p)->ArgVarList[i] = malloc(sizeof(char));
 		  memcpy((*p)->ArgVarList[i], trimWhiteSpaces(&tmpCmd[past]), next-past);
 		  i++;

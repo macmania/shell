@@ -75,43 +75,48 @@ void launchJob(job* j) {
 	
 	process* p;// = j->first_process;
 	
-	for(p = j->first_process; p; p = p->next){
+	for(p = j->first_process; p; p = p->next) {
+		
 		childPid = fork();
 
-    signal(SIGTSTP, SIG_DFL);
-    signal(SIGTTIN, SIG_DFL);
-    signal(SIGTTOU, SIG_DFL);
-    signal(SIGSTOP, SIG_DFL);
-    signal(SIGINT, SIG_DFL);
-    signal(SIGCONT, SIG_DFL);
-    sigaction(SIGCHLD, &sa, NULL); 
+	    signal(SIGTSTP, SIG_DFL);
+	    signal(SIGTTIN, SIG_DFL);
+	    signal(SIGTTOU, SIG_DFL);
+	    signal(SIGSTOP, SIG_DFL);
+	    signal(SIGINT, SIG_DFL);
+	    signal(SIGCONT, SIG_DFL);
+	    sigaction(SIGCHLD, &sa, NULL); 
 
-
-		if(childPid == 0) { //still need to work on how to redirect piping
-			
-			setpgrp(); 
+		if(childPid == -1){
+			perror("Shell err"); fflush(0); 
+			exit(EXIT_FAILURE); 
+			break;
+		}
+		else if(childPid == 0) { //still need to work on how to redirect piping
+		//	p->pPid = getpgrp(); 
 
       /** Temporary fix **/
-      char* temp[p->argVarNum+1]; 
-      int i; 
-      for(i = 0; i < p->argVarNum+1; i++)
-        temp[i] = p->ArgVarList[i]; 
-      temp[p->argVarNum] = NULL;
-      
-      p->pid = getpid(); 
-      //execvp(p->command, temp);
-      execvp(p->command, p->ArgVarList);
-      
-
-      exit(EXIT_SUCCESS); 
-		} else {
-		  j->pgid = getpid();
-		  pPid = waitpid(WAIT_ANY, 0, WNOHANG);
-		  if(EINTR == pPid)
-			  printf("signal interrupt delivered to calling process");
+		    p->pid = getpid(); 
+		      //execvp(p->command, temp);
+		    execvp(p->command, p->ArgVarList);
+	     	exit(EXIT_SUCCESS); 
+	     	break;
+		} 
+		else {
+			printf("HERE1232123"); 
+			setpgid(childPid, childPid); 
+			addJob(firstJob, j);
+			if(p->status == FOREGROUND){
+				setJobForeground(j, 0); 
+				break;
+			}
+			else if(p->status == BACKGROUND){
+				setJobBackground(j, 0); 
+				break;
+			}
+			break;
 		}
 	}
-	
 }
 
 
@@ -125,7 +130,7 @@ void sigChldHandler(int sig, siginfo_t *si, void *context){
 	if(pid > 0){ //handle the
 		job *j = getJob(pid, BY_PROCESS_ID);
 		if(j == NULL){
-      (*firstJob)->first_process->pid = pid; 
+      		//(*firstJob)->first_process->pid = pid; 
 			//printf("Job is null inside sig child handler\n"); //temporary debug print info
 			return;
 		}
@@ -385,11 +390,15 @@ job* getJob(pid_t pid, int searchCriteria){
 		perror("Job pipeline empty"); fflush(0);
 		return NULL;
 	}
-	job *head;//, *result;
+	job* head;//, *result;
 	process* proc;
-	for(head = (job*)*firstJob; head; head = head->next){
+	for(head = *firstJob; head; head = head->next){
 		for(proc = head->first_process; proc; proc = proc->next){
-			if(proc->pid == pid)
+			if(proc == NULL) {
+				return NULL;
+				//break;
+			}
+			else if(proc->pid == pid)
 				return head;
 		}
 	}
