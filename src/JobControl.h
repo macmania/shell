@@ -4,18 +4,17 @@
 	This is the basis for job control
 **/
 #include <termios.h>
-//#include "Parser.h"
 
 #define MAX_VAR_NUM 10
 #define PIPE_MAX_NUM 10
 #define FILE_MAX_NUM 40
 
 #define BACKGROUND 0
-#define FOREGROUND 1
-#define SUSPENDED 2
+#define FOREGROUND 1 //running
+#define SUSPENDED 2 //blocked
 #define RUNNING 3
-#define WAIT_INPUT 4
-#define COMPLETED 5
+#define WAIT_INPUT 4 
+#define COMPLETED 5 //terminated
 
 
 #define DIRECT_IN '<'
